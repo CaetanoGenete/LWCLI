@@ -1,0 +1,4 @@
+C:/Users/caeta/Documents/Projects/C++/working/LWCLI/build/CMakeFiles/LWCLI.dir
+C:/Users/caeta/Documents/Projects/C++/working/LWCLI/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/caeta/Documents/Projects/C++/working/LWCLI/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/caeta/Documents/Projects/C++/working/LWCLI/build/sandbox/CMakeFiles/sandbox.dir
