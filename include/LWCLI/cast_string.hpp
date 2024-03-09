@@ -1,0 +1,12 @@
+#ifndef LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
+#define LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
+
+#include <string>
+
+namespace lwcli {
+
+
+
+}
+
+#endif // LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
