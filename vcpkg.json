@@ -1,5 +1,10 @@
 {
-  "dependencies": [
-    "benchmark"
-  ]
+  "name": "lwcli",
+  "version": "0.0.1",
+  "features": {
+    "benchmarks": {
+      "description": "Build benchmarks",
+      "dependencies": ["benchmark"]
+    }
+  }
 }

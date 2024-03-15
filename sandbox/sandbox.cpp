@@ -1,11 +1,5 @@
-// #include "LWCLI/options.hpp"
-#include <fstream>
-#include <ctime>
-#include <vector>
-#include <random>
-#include <iostream>
-#include <functional>
-#include <chrono>
+#include "LWCLI/options.hpp"
+
 
 struct test
 {
@@ -16,29 +10,19 @@ struct test
 
 int main(unsigned int argc, const char** argv)
 {
-    using namespace std::chrono;
+    lwcli::FlagOption _option1;
+    _option1.aliases = {"-v", "--verbose"};
 
-    std::default_random_engine eng{0};
-    std::uniform_int_distribution dist;
-    auto rand = std::bind(dist, std::ref(eng));
+    lwcli::KeyValueOption<int> _option2;
+    _option2.aliases = {"--value"};
 
-    std::vector<std::string> strings;
-    for (unsigned int n = 100; n <= 100; n += 100) {
-        strings.clear();
-        for(unsigned int i = 0; i < n; ++i) {
-            unsigned int size = 10 + (rand() % 20);
-            std::string str = "--";
-            str.reserve(str.size() + size);
-            for(unsigned int j = 0; j < size; ++j)
-                str += (char) (('A' + rand() % ('Z' - 'A' + 1)) ^ ((rand() % 2) * 32));
-        }
-        std::vector<test> list;
-        list.reserve(strings.size());
-        for(auto& str : strings)
-            list.emplace_back(str, nullptr, nullptr);
+    lwcli::PositionalOption<double> _option3;
 
-        auto prev = system_clock().now();
-        std::cout << duration_cast<milliseconds>(system_clock().now() - prev) << "\n";
+    lwcli::CLIParser parser;
+    parser.register_option(_option1);
+    parser.register_option(_option2);
+    parser.register_option(_option3);
+    parser.parse(argc, argv);
 
-    }
+    std::cout << _option1.count << std::endl;
 }
