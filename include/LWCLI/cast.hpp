@@ -3,6 +3,7 @@
 
 #include <string>
 #include <concepts>
+#include <optional>
 
 namespace lwcli
 {

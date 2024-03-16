@@ -7,7 +7,8 @@
 #include <iostream>
 #include <cassert>
 
-#include "LWCLI/cast_string.hpp"
+#include "LWCLI/cast.hpp"
+#include "LWCLI/type_utility.hpp"
 
 namespace lwcli
 {
@@ -64,9 +65,9 @@ namespace lwcli
 
         struct _match_event
         {
-            const _id_type id;
-            const _on_match_t on_match;
-            void* const result_ptr;
+            _id_type id;
+            _on_match_t on_match;
+            void* result_ptr;
         };
 
     private:
@@ -87,7 +88,7 @@ namespace lwcli
             const char* value,
             void* const result_ptr)
         {
-            *static_cast<Type*>(result_ptr) = cast<Type>::from_string(value);
+            *static_cast<Type*>(result_ptr) = cast<unwrapped_t<Type>>::from_string(value);
         }
 
     private:
@@ -147,7 +148,7 @@ namespace lwcli
             const auto argend = argv + argc;
             while (++argv != argend) {
                 const auto loc = _named_events.find(*argv);
-                const auto event = loc != _named_events.end()
+                auto event = loc != _named_events.end()
                     ? loc->second
                     : _positional_events[position++];
 
@@ -156,10 +157,11 @@ namespace lwcli
                     std::invoke(event.on_match.nullary, event.result_ptr);
                     break;
                 case _option_type::KEY_VALUE:
-                    if (++argv == argend) {
-                        //TODO: Properly handle error
-                        return;
-                    }
+                    if (std::distance(argv, argend) > 1)
+                        ++argv;
+                    // If there is no value to read, assume option must be positional (fall-through).
+                    else
+                        event = _positional_events[position++];
                 case _option_type::POSITIONAL:
                     std::invoke(event.on_match.unary, *argv, event.result_ptr);
                     break;
