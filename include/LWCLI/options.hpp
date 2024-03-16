@@ -7,6 +7,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "LWCLI/cast_string.hpp"
+
 namespace lwcli
 {
 
@@ -76,16 +78,16 @@ namespace lwcli
     private:
         static void _on_match_flag(void* const count_ptr)
         {
-            auto& count = *static_cast<FlagOption::count_t* const>(count_ptr);
+            auto& count = *static_cast<FlagOption::count_t*>(count_ptr);
             ++count;
         }
 
         template<class Type>
         static void _on_match_valued(
-            const char* key,
-            void* const value_ptr)
+            const char* value,
+            void* const result_ptr)
         {
-            std::cout << "matched valued option: " << typeid(Type).name() << ", " << key << std::endl;
+            *static_cast<Type*>(result_ptr) = cast<Type>::from_string(value);
         }
 
     private:
@@ -96,11 +98,13 @@ namespace lwcli
             void* const result)
         {
             _named_events.reserve(_named_events.size() + aliases.size());
+
+            const auto id = _new_id(type);
             for (const std::string& key : aliases) {
                 _named_events.emplace(
                     std::piecewise_construct,
                     std::make_tuple(key),
-                    std::make_tuple(_new_id(type), on_match, result));
+                    std::make_tuple(id, on_match, result));
             }
             return *this;
         }
@@ -134,33 +138,31 @@ namespace lwcli
                 &option.value);
             return *this;
         }
+
     public:
-        void parse(unsigned int argc, const char** argv)
+        void parse(int argc, const char** argv)
         {
             size_t position = 0;
 
             const auto argend = argv + argc;
             while (++argv != argend) {
                 const auto loc = _named_events.find(*argv);
-                if (loc != _named_events.end()) {
-                    const auto event = loc->second;
-                    assert(event.id.type != _option_type::POSITIONAL);
-                    switch (event.id.type) {
-                    case _option_type::FLAG:
-                        std::invoke(event.on_match.nullary, event.result_ptr);
-                        break;
-                    case _option_type::KEY_VALUE:
-                        if (++argv == argend) {
-                            //TODO: Properly handle error
-                            return;
-                        }
-                        std::invoke(event.on_match.unary, *argv, event.result_ptr);
-                        break;
+                const auto event = loc != _named_events.end()
+                    ? loc->second
+                    : _positional_events[position++];
+
+                switch (event.id.type) {
+                case _option_type::FLAG:
+                    std::invoke(event.on_match.nullary, event.result_ptr);
+                    break;
+                case _option_type::KEY_VALUE:
+                    if (++argv == argend) {
+                        //TODO: Properly handle error
+                        return;
                     }
-                }
-                else {
-                    const auto event = _positional_events[position++];
+                case _option_type::POSITIONAL:
                     std::invoke(event.on_match.unary, *argv, event.result_ptr);
+                    break;
                 }
             }
         }
