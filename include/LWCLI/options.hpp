@@ -124,9 +124,9 @@ namespace lwcli
 
             const auto id = _new_id(type);
             for (const std::string& key : aliases) {
-#ifdef LWCLI_ENFORCE_PREFIXES
+#ifndef LWCLI_DO_NOT_ENFORCE_PREFIXES
                 assert(key.starts_with("-") || key.starts_with("--"));
-#endif // LWCLI_ENFORCE_PREFIXES
+#endif // LWCLI_DO_NOT_ENFORCE_PREFIXES
                 _named_events.emplace(
                     std::piecewise_construct,
                     std::make_tuple(key),
@@ -166,7 +166,7 @@ namespace lwcli
         }
 
     public:
-        void parse(const int argc, const char** argv)
+        void parse(const int argc, const char** argv) noexcept(false)
         {
             const size_t max_positional = _positional_events.size();
             size_t position = 0;
@@ -205,6 +205,7 @@ namespace lwcli
                             << "' expected an argument, but none were provided.";
                         throw bad_parse(ss.str());
                     }
+                    [[fallthrough]];
 
                 case _option_type::POSITIONAL:
                     try {

@@ -11,6 +11,7 @@ int main(int argc, const char** argv)
     lwcli::CLIParser parser;
     parser.register_option(_option1);
     parser.register_option(_option2);
+
     try {
         parser.parse(argc, argv);
     }

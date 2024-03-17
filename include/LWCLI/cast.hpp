@@ -16,7 +16,7 @@ namespace lwcli
     template<>
     struct cast<std::string>
     {
-        [[nodiscard]] constexpr static std::string from_string(const char* str)
+        [[nodiscard]] constexpr static std::string from_string(const char* str) noexcept
         {
             return str;
         }
@@ -24,7 +24,7 @@ namespace lwcli
 
     /* Numeric casts ------------------------------------------------------------------------------------------------ */
 
-    //TODO: Perhaps call each sto... function independentaly
+    //TODO: Perhaps call each sto[x] function independentaly
     template<std::floating_point FPType>
     struct cast<FPType>
     {
