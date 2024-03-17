@@ -14,6 +14,9 @@ namespace lwcli
 
     template<class Type>
     using unwrapped_t = unwrapped<Type>::type;
+
+    template<class Type>
+    constexpr bool is_optional_v = !std::is_same_v<unwrapped_t<Type>, Type>;
 }
 
 #endif // LWCLI_INCLUDE_LWCLI_TYPE_UTILITY_HPP

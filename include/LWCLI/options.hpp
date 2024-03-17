@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <iostream>
 #include <cassert>
+#include <sstream>
+#include <cstdint>
+#include <functional>
 
 #include "LWCLI/cast.hpp"
 #include "LWCLI/type_utility.hpp"
@@ -39,6 +42,38 @@ namespace lwcli
         value_t value;
     };
 
+    struct _bad_cast
+    {
+        const char* value;
+        std::string type_name;
+    };
+
+    struct bad_parse : public std::runtime_error
+    {
+        bad_parse(const std::string& message):
+            std::runtime_error("[FATAL] " + message) {}
+    };
+
+    void _on_match_flag(void* const count_ptr)
+    {
+        auto& count = *static_cast<FlagOption::count_t*>(count_ptr);
+        ++count;
+    }
+
+    template<class Type>
+    void _on_match_valued(
+        const char* value,
+        void* const result_ptr)
+    {
+        using naked_type = unwrapped_t<Type>;
+        try {
+            *static_cast<Type*>(result_ptr) = cast<naked_type>::from_string(value);
+        }
+        catch (...) {
+            throw _bad_cast{ value, typeid(naked_type).name() };
+        }
+    }
+
     class CLIParser
     {
     private:
@@ -48,7 +83,7 @@ namespace lwcli
             void (*unary)(const char*, void*);
         };
 
-        enum class _option_type
+        enum class _option_type : uint8_t
         {
             FLAG,
             KEY_VALUE,
@@ -71,24 +106,11 @@ namespace lwcli
         };
 
     private:
-        [[nodiscard]] _id_type _new_id(_option_type type)
+        [[nodiscard]] auto _new_id(_option_type type) noexcept
         {
-            return { type, static_cast<_id_type::value_t>(_named_events.size() + _positional_events.size()) };
-        }
-
-    private:
-        static void _on_match_flag(void* const count_ptr)
-        {
-            auto& count = *static_cast<FlagOption::count_t*>(count_ptr);
-            ++count;
-        }
-
-        template<class Type>
-        static void _on_match_valued(
-            const char* value,
-            void* const result_ptr)
-        {
-            *static_cast<Type*>(result_ptr) = cast<unwrapped_t<Type>>::from_string(value);
+            const auto id_value = static_cast<_id_type::value_t>(_named_events.size() + _positional_events.size());
+            // Explicitely limiting `id_value` to avoid GCC -Wconversion error.
+            return _id_type{ type, id_value % (1 << 30) };
         }
 
     private:
@@ -102,6 +124,9 @@ namespace lwcli
 
             const auto id = _new_id(type);
             for (const std::string& key : aliases) {
+#ifdef LWCLI_ENFORCE_PREFIXES
+                assert(key.starts_with("-") || key.starts_with("--"));
+#endif // LWCLI_ENFORCE_PREFIXES
                 _named_events.emplace(
                     std::piecewise_construct,
                     std::make_tuple(key),
@@ -141,29 +166,63 @@ namespace lwcli
         }
 
     public:
-        void parse(int argc, const char** argv)
+        void parse(const int argc, const char** argv)
         {
+            const size_t max_positional = _positional_events.size();
             size_t position = 0;
 
             const auto argend = argv + argc;
             while (++argv != argend) {
-                const auto loc = _named_events.find(*argv);
-                auto event = loc != _named_events.end()
-                    ? loc->second
-                    : _positional_events[position++];
+                _match_event event;
+                if (const auto loc = _named_events.find(*argv); loc != _named_events.end()) {
+                    event = loc->second;
+                }
+                else {
+                    if (position < max_positional) {
+                        event = _positional_events[position++];
+                    }
+                    else {
+                        std::stringstream ss;
+                        ss << "Program expects at most "
+                            << max_positional
+                            << " positional arguments, yet atleast "
+                            << position + 1
+                            << " were provided.";
+                        throw bad_parse(ss.str());
+                    }
+                }
 
                 switch (event.id.type) {
                 case _option_type::FLAG:
                     std::invoke(event.on_match.nullary, event.result_ptr);
                     break;
+
                 case _option_type::KEY_VALUE:
-                    if (std::distance(argv, argend) > 1)
-                        ++argv;
-                    // If there is no value to read, assume option must be positional (fall-through).
-                    else
-                        event = _positional_events[position++];
+                    if (++argv == argend) {
+                        std::stringstream ss;
+                        ss << "Option '"
+                            << *std::prev(argv)
+                            << "' expected an argument, but none were provided.";
+                        throw bad_parse(ss.str());
+                    }
+
                 case _option_type::POSITIONAL:
-                    std::invoke(event.on_match.unary, *argv, event.result_ptr);
+                    try {
+                        std::invoke(event.on_match.unary, *argv, event.result_ptr);
+                    }
+                    catch (const _bad_cast& e) {
+                        std::stringstream ss;
+                        if (event.id.type == _option_type::KEY_VALUE) {
+                            ss << "While parsing '"
+                                << *std::prev(argv)
+                                << "': ";
+                        }
+                        ss << "No suitable conversion found from '"
+                            << e.value
+                            << "' to "
+                            << e.type_name;
+                        throw bad_parse(ss.str());
+                    }
                     break;
                 }
             }
@@ -172,7 +231,6 @@ namespace lwcli
     private:
         std::unordered_map<std::string, _match_event> _named_events;
         std::vector<_match_event> _positional_events;
-        // std::vector<_match_event::id_t> _required_events;
     };
 
 }
