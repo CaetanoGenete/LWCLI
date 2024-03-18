@@ -6,24 +6,43 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
                       " to remove CMakeCache.txt.")
 endif()
 
-project("LWCLI" LANGUAGES CXX)
+# Options --------------------------------------------------------------------------------------------------------------
+
+option(BUILD_TESTS "Build test executables" OFF)
+option(BUILD_BENCHMARK "Build benchmark executables" OFF)
+
+if(BUILD_TESTS)
+  list(APPEND VCPKG_MANIFEST_FEATURES "tests")
+endif()
+
+if(BUILD_BENCHMARK)
+  list(APPEND VCPKG_MANIFEST_FEATURES "benchmarks")
+endif()
+
+project("LWCLI" VERSION 0.0.1 LANGUAGES CXX)
 
 # Library build settings -----------------------------------------------------------------------------------------------
 
 set(HEADER_DIR ${CMAKE_SOURCE_DIR}/include)
-set(LWCLI_PUBLIC_HEADERS "LWCLI.hpp")
+set(LWCLI_PUBLIC_HEADERS
+  "LWCLI.hpp"
+  "options.hpp"
+  "cast.hpp"
+  "type_utility.hpp")
 list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND ${HEADER_DIR}/LWCLI/)
 
 add_library(${PROJECT_NAME} INTERFACE ${LWCLI_PUBLIC_HEADERS})
 target_include_directories(${PROJECT_NAME} INTERFACE ${HEADER_DIR})
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
-# Other sub-directories ------------------------------------------------------------------------------------------------
+# Subdirectories -------------------------------------------------------------------------------------------------------
 
 add_subdirectory(sandbox)
 
-option(BUILD_BENCHMARK "Build benchmark executables" OFF)
+if(BUILD_TESTS)
+  add_subdirectory(test)
+endif()
+
 if(BUILD_BENCHMARK)
-  list(APPEND VCPKG_MANIFEST_FEATURES "benchmarks")
   add_subdirectory(benchmark)
 endif()

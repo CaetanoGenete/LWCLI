@@ -4,7 +4,11 @@
   "features": {
     "benchmarks": {
       "description": "Build benchmarks",
-      "dependencies": ["benchmark"]
+      "dependencies": [ "benchmark" ]
+    },
+    "tests": {
+      "description": "Build tests",
+      "dependencies": [ "gtest" ]
     }
   }
 }

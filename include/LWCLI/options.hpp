@@ -94,8 +94,11 @@ namespace lwcli
         {
             using value_t = uint32_t;
 
-            _option_type type : 2;
-            value_t value : 32 - 2;
+            static constexpr uint8_t ntype_bits = 2;
+            static constexpr uint8_t nvalue_bits = sizeof(value_t) * 8 - ntype_bits;
+
+            _option_type type : ntype_bits;
+            value_t value : nvalue_bits;
         };
 
         struct _match_event
@@ -110,7 +113,7 @@ namespace lwcli
         {
             const auto id_value = static_cast<_id_type::value_t>(_named_events.size() + _positional_events.size());
             // Explicitely limiting `id_value` to avoid GCC -Wconversion error.
-            return _id_type{ type, id_value % (1 << 30) };
+            return _id_type{ type, id_value % (1 << _id_type::nvalue_bits) };
         }
 
     private:
@@ -124,9 +127,11 @@ namespace lwcli
 
             const auto id = _new_id(type);
             for (const std::string& key : aliases) {
+
 #ifndef LWCLI_DO_NOT_ENFORCE_PREFIXES
                 assert(key.starts_with("-") || key.starts_with("--"));
 #endif // LWCLI_DO_NOT_ENFORCE_PREFIXES
+
                 _named_events.emplace(
                     std::piecewise_construct,
                     std::make_tuple(key),
