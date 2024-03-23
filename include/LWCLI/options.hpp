@@ -112,7 +112,7 @@ namespace lwcli
         [[nodiscard]] auto _new_id(_option_type type) noexcept
         {
             const auto id_value = static_cast<_id_type::value_t>(_named_events.size() + _positional_events.size());
-            // Explicitely limiting `id_value` to avoid GCC -Wconversion error.
+            // Explicitely masking `id_value` to avoid GCC -Wconversion error.
             return _id_type{ type, id_value % (1 << _id_type::nvalue_bits) };
         }
 
@@ -171,7 +171,7 @@ namespace lwcli
         }
 
     public:
-        void parse(const int argc, const char** argv) noexcept(false)
+        void parse(const int argc, const char** argv)
         {
             const size_t max_positional = _positional_events.size();
             size_t position = 0;

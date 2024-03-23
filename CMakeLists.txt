@@ -29,7 +29,7 @@ set(LWCLI_PUBLIC_HEADERS
   "options.hpp"
   "cast.hpp"
   "type_utility.hpp")
-list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND ${HEADER_DIR}/LWCLI/)
+list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND include/LWCLI/)
 
 add_library(${PROJECT_NAME} INTERFACE ${LWCLI_PUBLIC_HEADERS})
 target_include_directories(${PROJECT_NAME} INTERFACE ${HEADER_DIR})
@@ -40,6 +40,7 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 add_subdirectory(sandbox)
 
 if(BUILD_TESTS)
+  enable_testing()
   add_subdirectory(test)
 endif()
 

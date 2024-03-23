@@ -1,0 +1,61 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "MSVC17",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/MSVC",
+            "generator": "Visual Studio 17 2022",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "/W4 /WX /EHsc"
+            }
+        },
+        {
+            "name": "MinGW",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/MinGW",
+            "generator": "MinGW Makefiles",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra"
+            }
+        },
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address"
+            }
+        },
+        {
+            "name": "testAll",
+            "hidden": true,
+            "cacheVariables": {
+                "BUILD_TESTS": "On"
+            }
+
+        },
+        {
+            "name": "MSVC17-testAll",
+            "description": "MSVC 17 build with tests enabled",
+            "inherits": [
+                "MSVC17",
+                "testAll"
+            ]
+        },
+        {
+            "name": "MinGW-debug-testAll",
+            "description": "MinGW debug build with tests enabled",
+            "inherits": [
+                "MinGW",
+                "testAll",
+                "debug"
+            ]
+        }
+    ]
+}
