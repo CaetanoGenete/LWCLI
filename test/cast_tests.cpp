@@ -33,26 +33,20 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(IntCastTests, happy_int_casts)
 {
     int value;
-    ASSERT_NO_THROW({
-        value = lwcli::cast<int>::from_string(GetParam());
-        });
+    ASSERT_NO_THROW({ value = lwcli::cast<int>::from_string(GetParam()); });
     ASSERT_EQ(value, std::stoi(GetParam()));
 }
 
 TEST_P(DoubleCastTests, happy_double_casts)
 {
     double value;
-    ASSERT_NO_THROW({
-        value = lwcli::cast<double>::from_string(GetParam());
-        });
+    ASSERT_NO_THROW({ value = lwcli::cast<double>::from_string(GetParam()); });
     ASSERT_EQ(value, std::stod(GetParam()));
 }
 
 TEST_P(StringCastTest, happy_string_casts)
 {
     std::string value;
-    ASSERT_NO_THROW({
-        value = lwcli::cast<std::string>::from_string(GetParam());
-        });
+    ASSERT_NO_THROW({ value = lwcli::cast<std::string>::from_string(GetParam()); });
     ASSERT_EQ(value, std::string(GetParam()));
 }
