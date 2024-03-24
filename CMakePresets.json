@@ -28,8 +28,7 @@
             "name": "debug",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS": "-fsanitize=address"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
@@ -38,13 +37,13 @@
             "cacheVariables": {
                 "BUILD_TESTS": "On"
             }
-
         },
         {
             "name": "MSVC17-testAll",
             "description": "MSVC 17 build with tests enabled",
             "inherits": [
                 "MSVC17",
+                "debug",
                 "testAll"
             ]
         },

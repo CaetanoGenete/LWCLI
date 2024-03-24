@@ -1,5 +1,9 @@
 #include "gtest/gtest.h"
 
+#include <ranges>
+#include <string>
+#include <sstream>
+
 #include "LWCLI/LWCLI.hpp"
 
 TEST(integration, all_options_types_happy)
@@ -27,29 +31,45 @@ TEST(integration, all_options_types_happy)
     ASSERT_EQ(std::stod(positional), positional_option.value);
 }
 
-struct key_value_unhappy_tests : testing::TestWithParam<std::vector<const char*>>
-{
-    static constexpr auto key = "--value";
-};
+struct key_value_unhappy_tests : testing::TestWithParam<std::string> {};
 
 INSTANTIATE_TEST_SUITE_P(
     unhappy_key_value_args,
     key_value_unhappy_tests,
     testing::Values(
-        std::vector({ "integration", key_value_unhappy_tests::key }),
-        std::vector({ "integration", key_value_unhappy_tests::key, "non-int-value" }),
-        std::vector({ "integration", "--undefined-key", "10" })));
+        "integration --value non-int-value",
+        "integration --value non-int-value",
+        "integration --undefined-key 10"));
 
 TEST_P(key_value_unhappy_tests, key_value_unhappy)
 {
     lwcli::KeyValueOption<int> key_value;
-    key_value.aliases = { key_value_unhappy_tests::key };
+    key_value.aliases = { "--value" };
 
     lwcli::CLIParser parser;
     parser.register_option(key_value);
 
-    const std::vector<const char*>& args = GetParam();
+    // Control case (non-failing)
+
+    const char* control_argv[] = {"control", "--value", "10"};
+    const auto control_argc = std::size(control_argv);
+    EXPECT_NO_THROW(parser.parse(control_argc, control_argv));
+
+    // Failing case:
+
+    std::stringstream data(GetParam());
+
+    std::vector<std::string> args;
+    std::string line;
+    while (std::getline(data, line, ' '))
+        args.push_back(line);
+
+    std::vector<const char*> cstr_args;
+    cstr_args.reserve(std::size(args));
+    for(const auto& arg : args)
+        cstr_args.emplace_back(arg.c_str());
+
     const auto argc = static_cast<int>(std::size(args));
-    const char* const* const argv = std::data(args);
+    const auto argv = std::data(cstr_args);
     ASSERT_THROW(parser.parse(argc, argv), lwcli::bad_parse);
 }
