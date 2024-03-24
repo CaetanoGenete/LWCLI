@@ -21,9 +21,9 @@ TEST(integration, all_options_types_happy)
     parser.register_option(key_value_option);
     parser.register_option(positional_option);
 
-    const char* value = "10";
-    const char* positional = "0.31415926";
-    const char* argv[] = { "integration", "-v", "--value", value, positional };
+    constexpr const char* value = "10";
+    constexpr const char* positional = "0.31415926";
+    constexpr const char* argv[] = { "integration", "-v", "--value", value, positional };
 
     ASSERT_NO_THROW(parser.parse(static_cast<int>(std::size(argv)), argv));
     ASSERT_EQ(1, flag_option.count);
@@ -31,7 +31,7 @@ TEST(integration, all_options_types_happy)
     ASSERT_EQ(std::stod(positional), positional_option.value);
 }
 
-struct key_value_unhappy_tests : testing::TestWithParam<std::string> {};
+struct key_value_unhappy_tests : public testing::TestWithParam<std::string> {};
 
 INSTANTIATE_TEST_SUITE_P(
     unhappy_key_value_args,
@@ -52,8 +52,8 @@ TEST_P(key_value_unhappy_tests, key_value_unhappy)
 
     // Control case (non-failing)
 
-    const char* control_argv[] = {"control", "--value", "10"};
-    const auto control_argc = std::size(control_argv);
+    constexpr const char* control_argv[] = { "control", "--value", "10" };
+    constexpr const auto control_argc = std::size(control_argv);
     EXPECT_NO_THROW(parser.parse(control_argc, control_argv));
 
     // Failing case:
@@ -67,10 +67,41 @@ TEST_P(key_value_unhappy_tests, key_value_unhappy)
 
     std::vector<const char*> cstr_args;
     cstr_args.reserve(std::size(args));
-    for(const auto& arg : args)
+    for (const auto& arg : args)
         cstr_args.emplace_back(arg.c_str());
 
     const auto argc = static_cast<int>(std::size(args));
     const auto argv = std::data(cstr_args);
     ASSERT_THROW(parser.parse(argc, argv), lwcli::bad_parse);
+}
+
+TEST(interation, duplicate_flag_options_happy)
+{
+    lwcli::FlagOption flag_option;
+    flag_option.aliases = { "--value1", "--value2", "--value3" };
+
+    lwcli::FlagOption other_flag_option;
+    other_flag_option.aliases = { "--other-value" };
+
+    lwcli::CLIParser parser;
+    parser.register_option(flag_option);
+    parser.register_option(other_flag_option);
+
+    constexpr const char* argv[] {
+        "integration",
+        "--value1",
+        "--value1",
+        "--value2",
+        "--value2",
+        "--value2",
+        "--value3",
+        "--value3",
+        "--other-value",
+        "--value3",
+        "--value3"
+    };
+    constexpr auto argc = static_cast<int>(std::size(argv));
+
+    ASSERT_NO_THROW(parser.parse(argc, argv));
+    ASSERT_EQ(9, flag_option.count);
 }
