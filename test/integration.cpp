@@ -39,6 +39,7 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values(
         "integration --value non-int-value",
         "integration --value non-int-value",
+        "integration --value --other-value 10",
         "integration --undefined-key 10"));
 
 TEST_P(key_value_unhappy_tests, key_value_unhappy)
