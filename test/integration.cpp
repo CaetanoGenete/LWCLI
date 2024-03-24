@@ -110,7 +110,18 @@ TEST(interation, duplicate_flag_options_happy)
     ASSERT_EQ(9, flag_option.count);
 }
 
-TEST(integration, required_key_value_options_unhappy)
+struct required_key_value_tests : public testing::TestWithParam<std::string> {};
+
+INSTANTIATE_TEST_SUITE_P(
+    unhappy_required_key_value_tests,
+    required_key_value_tests,
+    testing::Values(
+        "integration",
+        "integration --required1 10",
+        "integration --required2 10"));
+
+
+TEST_P(required_key_value_tests, required_key_value_options_unhappy)
 {
     lwcli::KeyValueOption<int> required_1;
     required_1.aliases = { "--required1" };
@@ -122,7 +133,19 @@ TEST(integration, required_key_value_options_unhappy)
     parser.register_option(required_1);
     parser.register_option(required_2);
 
-    const char* argv[] = { "integration", "--required1" };
-    const auto argc = std::size(argv);
+    // Control case (non-failing)
+
+    constexpr const char* control_argv[] = { "control", "--required1", "10", "--required2", "20" };
+    constexpr const auto control_argc = std::size(control_argv);
+    EXPECT_NO_THROW(parser.parse(control_argc, control_argv));
+
+    // Failing case:
+
+    const auto args = split_args(GetParam());
+    const auto cstr_view = args | std::views::transform(&std::string::c_str);
+    const auto cstr_args = std::vector(std::begin(cstr_view), std::end(cstr_view));
+
+    const auto argc = static_cast<int>(std::size(args));
+    const auto argv = std::data(cstr_args);
     ASSERT_THROW(parser.parse(argc, argv), lwcli::bad_parse);
 }
