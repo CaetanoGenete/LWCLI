@@ -46,7 +46,7 @@ TEST(integration, all_options_types_happy)
 struct key_value_unhappy_tests : public testing::TestWithParam<std::string> {};
 
 INSTANTIATE_TEST_SUITE_P(
-    unhappy_key_value_args,
+    invalid_key_value_args,
     key_value_unhappy_tests,
     testing::Values(
         "integration --value non-int-value",
@@ -113,7 +113,7 @@ TEST(interation, duplicate_flag_options_happy)
 struct required_key_value_tests : public testing::TestWithParam<std::string> {};
 
 INSTANTIATE_TEST_SUITE_P(
-    unhappy_required_key_value_tests,
+    invalid_required_key_value_inputs,
     required_key_value_tests,
     testing::Values(
         "integration",
