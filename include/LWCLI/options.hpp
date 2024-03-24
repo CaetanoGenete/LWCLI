@@ -171,7 +171,7 @@ namespace lwcli
         }
 
     public:
-        void parse(const int argc, const char** argv)
+        void parse(const int argc, const char* const* argv)
         {
             const size_t max_positional = _positional_events.size();
             size_t position = 0;
@@ -188,9 +188,11 @@ namespace lwcli
                     }
                     else {
                         std::stringstream ss;
-                        ss << "Program expects at most "
+                        ss << "While parsing '"
+                            << *argv
+                            << "': program expects at most "
                             << max_positional
-                            << " positional arguments, yet atleast "
+                            << " positional arguments, yet at least "
                             << position + 1
                             << " were provided.";
                         throw bad_parse(ss.str());
