@@ -9,6 +9,8 @@
 #include <sstream>
 #include <cstdint>
 #include <functional>
+#include <unordered_set>
+#include <ranges>
 
 #include "LWCLI/cast.hpp"
 #include "LWCLI/type_utility.hpp"
@@ -117,7 +119,7 @@ namespace lwcli
         }
 
     private:
-        CLIParser& _register_named(
+        _id_type _register_named(
             const _option_type type,
             const std::vector<std::string>& aliases,
             const _on_match_t on_match,
@@ -127,37 +129,44 @@ namespace lwcli
 
             const auto id = _new_id(type);
             for (const std::string& key : aliases) {
-
 #ifndef LWCLI_DO_NOT_ENFORCE_PREFIXES
                 assert(key.starts_with("-") || key.starts_with("--"));
 #endif // LWCLI_DO_NOT_ENFORCE_PREFIXES
+                assert(!_named_events.contains(key));
 
                 _named_events.emplace(
                     std::piecewise_construct,
                     std::make_tuple(key),
                     std::make_tuple(id, on_match, result));
             }
-            return *this;
+            return id;
         }
 
     public:
         CLIParser& register_option(FlagOption& option)
         {
-            return _register_named(
+            _register_named(
                 _option_type::FLAG,
                 option.aliases,
                 { .nullary = _on_match_flag },
                 &option.count);
+
+            return *this;
         }
 
         template<class Type>
         CLIParser& register_option(KeyValueOption<Type>& option)
         {
-            return _register_named(
+            const _id_type id = _register_named(
                 _option_type::KEY_VALUE,
                 option.aliases,
                 { .unary = _on_match_valued<Type> },
                 &option.value);
+
+            if constexpr (!lwcli::is_optional_v<Type>)
+                _required_events.push_back(id.value);
+
+            return *this;
         }
 
         template<class Type>
@@ -176,11 +185,16 @@ namespace lwcli
             const size_t max_positional = _positional_events.size();
             size_t position = 0;
 
+            std::unordered_set not_visted(
+                std::begin(_required_events),
+                std::end(_required_events));
+
             const auto argend = argv + argc;
             while (++argv != argend) {
                 _match_event event;
                 if (const auto loc = _named_events.find(*argv); loc != _named_events.end()) {
                     event = loc->second;
+                    not_visted.erase(event.id.value);
                 }
                 else {
                     if (position < max_positional) {
@@ -234,10 +248,30 @@ namespace lwcli
                     break;
                 }
             }
+
+            if (!not_visted.empty()) {
+                std::unordered_map<_id_type::value_t, std::string> aliases;
+                for (const auto& [key, event] : _named_events) {
+                    if (not_visted.contains(event.id.value)) {
+                        auto [loc, success] = aliases.try_emplace(event.id.value, key);
+                        if (!success)
+                            loc->second += " | " + key;
+                    }
+                }
+
+                std::stringstream ss;
+                ss << "Arguments:\n";
+                for (const std::string& arg_list : aliases | std::views::values)
+                    ss << "\t> " << arg_list << "\n";
+                ss << "were expected, but not provided.";
+                throw bad_parse(ss.str());
+            }
         }
 
     private:
         std::unordered_map<std::string, _match_event> _named_events;
+        std::vector<_id_type::value_t> _required_events;
+
         std::vector<_match_event> _positional_events;
     };
 

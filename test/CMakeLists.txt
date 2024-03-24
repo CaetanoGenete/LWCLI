@@ -2,11 +2,12 @@ include(GoogleTest)
 
 find_package(GTest CONFIG REQUIRED)
 
-add_executable(cast_tests cast_tests.cpp)
-target_link_libraries(cast_tests PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+function(add_lwcli_test test_name test_source)
+    add_executable(${test_name} ${test_source})
+    target_link_libraries(${test_name} PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+    gtest_discover_tests(${test_name})
+endfunction()
 
-add_executable(integration integration.cpp)
-target_link_libraries(integration PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
-
-gtest_discover_tests(cast_tests)
-gtest_discover_tests(integration)
+add_lwcli_test(cast_tests cast_tests.cpp)
+add_lwcli_test(assert_tests assert_tests.cpp)
+add_lwcli_test(integration integration.cpp)

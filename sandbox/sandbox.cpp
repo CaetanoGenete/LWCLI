@@ -1,11 +1,18 @@
 #include "LWCLI/LWCLI.hpp"
 
+void foo(int x)
+{
+    int buf[10];
+    buf[x] = 0; // <- ERROR
+    if (x == 1000) {}
+}
+
 int main(int argc, const char** argv)
 {
     lwcli::FlagOption _option1;
     _option1.aliases = {"-v", "--verbose"};
 
-    lwcli::KeyValueOption<std::optional<int>> _option2;
+    lwcli::KeyValueOption<int> _option2;
     _option2.aliases = {"--value"};
 
     lwcli::CLIParser parser;

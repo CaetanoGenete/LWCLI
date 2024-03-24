@@ -31,6 +31,7 @@ set(LWCLI_PUBLIC_HEADERS
   "type_utility.hpp")
 list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND include/LWCLI/)
 
+
 add_library(${PROJECT_NAME} INTERFACE ${LWCLI_PUBLIC_HEADERS})
 target_include_directories(${PROJECT_NAME} INTERFACE ${HEADER_DIR})
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)

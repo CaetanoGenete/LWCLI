@@ -6,6 +6,18 @@
 
 #include "LWCLI/LWCLI.hpp"
 
+[[nodiscard]] std::vector<std::string> split_args(const std::string& command_line) noexcept
+{
+    std::stringstream ss(command_line);
+    std::vector<std::string> result;
+
+    std::string arg;
+    while (std::getline(ss, arg, ' '))
+        result.push_back(arg);
+
+    return result;
+}
+
 TEST(integration, all_options_types_happy)
 {
     lwcli::FlagOption flag_option;
@@ -58,17 +70,9 @@ TEST_P(key_value_unhappy_tests, key_value_unhappy)
 
     // Failing case:
 
-    std::stringstream data(GetParam());
-
-    std::vector<std::string> args;
-    std::string line;
-    while (std::getline(data, line, ' '))
-        args.push_back(line);
-
-    std::vector<const char*> cstr_args;
-    cstr_args.reserve(std::size(args));
-    for (const auto& arg : args)
-        cstr_args.emplace_back(arg.c_str());
+    const auto args = split_args(GetParam());
+    const auto cstr_view = args | std::views::transform(&std::string::c_str);
+    const auto cstr_args = std::vector(std::begin(cstr_view), std::end(cstr_view));
 
     const auto argc = static_cast<int>(std::size(args));
     const auto argv = std::data(cstr_args);
@@ -87,7 +91,7 @@ TEST(interation, duplicate_flag_options_happy)
     parser.register_option(flag_option);
     parser.register_option(other_flag_option);
 
-    constexpr const char* argv[] {
+    constexpr const char* argv[]{
         "integration",
         "--value1",
         "--value1",
@@ -104,4 +108,21 @@ TEST(interation, duplicate_flag_options_happy)
 
     ASSERT_NO_THROW(parser.parse(argc, argv));
     ASSERT_EQ(9, flag_option.count);
+}
+
+TEST(integration, required_key_value_options_unhappy)
+{
+    lwcli::KeyValueOption<int> required_1;
+    required_1.aliases = { "--required1" };
+
+    lwcli::KeyValueOption<int> required_2;
+    required_2.aliases = { "--required2" };
+
+    lwcli::CLIParser parser;
+    parser.register_option(required_1);
+    parser.register_option(required_2);
+
+    const char* argv[] = { "integration", "--required1" };
+    const auto argc = std::size(argv);
+    ASSERT_THROW(parser.parse(argc, argv), lwcli::bad_parse);
 }
