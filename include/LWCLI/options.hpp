@@ -183,14 +183,13 @@ namespace lwcli
         void parse(const int argc, const char* const* argv)
         {
             const size_t max_positional = _positional_events.size();
-            size_t position = 0;
 
             std::unordered_set not_visted(
                 std::begin(_required_events),
                 std::end(_required_events));
 
             const auto argend = argv + argc;
-            while (++argv != argend) {
+            for (size_t position = 0; ++argv != argend;) {
                 _match_event event;
                 if (const auto loc = _named_events.find(*argv); loc != _named_events.end()) {
                     event = loc->second;

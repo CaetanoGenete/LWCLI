@@ -43,7 +43,6 @@
             "description": "MSVC 17 build with tests enabled",
             "inherits": [
                 "MSVC17",
-                "debug",
                 "testAll"
             ]
         },
