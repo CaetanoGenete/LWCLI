@@ -9,9 +9,7 @@
 
 namespace lwcli
 {
-    /**
-     * Base class from which all LWCLI parsing errors inherit.
-    */
+    /// Base class from which all LWCLI parsing errors inherit.
     struct bad_parse : public std::runtime_error
     {
     protected:
@@ -28,13 +26,11 @@ namespace lwcli
         const std::string type_name;
     };
 
-    /**
-     * Exception thrown if: More than the expected number of positional arguments are provided.
-     *
-     * > [!NOTE]
-     * > Unrecognised key-value/flag options are parsed as positional arguments, hence, this exception may be thrown in
-     * > the event that their identifiers are misspelled.
-    */
+    /// Exception thrown if: More than the expected number of positional arguments are provided.
+    ///
+    /// > [!NOTE]
+    /// > Unrecognised key-value/flag options are parsed as positional arguments, hence, this exception may be thrown in
+    /// > the event that their identifiers are misspelled.
     struct bad_positional_count : public bad_parse
     {
     public:
@@ -52,9 +48,7 @@ namespace lwcli
         const size_t n_max_positional;
     };
 
-    /**
-     * Exception thrown upon failure to convert from string to the expected type of a positional argument.
-    */
+    /// Exception thrown upon failure to convert from string to the expected type of a positional argument.
     struct bad_positional_conversion : public bad_parse
     {
         bad_positional_conversion(const _bad_cast& error_data):
@@ -72,9 +66,7 @@ namespace lwcli
     };
 
 
-    /**
-     * Exception thrown upon failure to convert from string to the expected type of a key-value argument.
-    */
+    /// Exception thrown upon failure to convert from string to the expected type of a key-value argument.
     struct bad_value_conversion : public bad_parse
     {
         bad_value_conversion(const std::string& key, const _bad_cast& error_data):
@@ -94,10 +86,8 @@ namespace lwcli
         const std::string type;
     };
 
-    /**
-     * Exception thrown if no value is provided to a key-value option, this can only happen if the key is the last
-     * argument passed.
-    */
+    /// Exception thrown if no value is provided to a key-value option, this can only happen if the key is the last
+    /// argument passed.
     struct bad_key_value_format : public bad_parse
     {
         bad_key_value_format(const std::string& key):
@@ -105,9 +95,7 @@ namespace lwcli
         {}
     };
 
-    /**
-     * Exception thrown if not **all** *required* arguments have been provided.
-    */
+    /// Exception thrown if not **all** *required* arguments have been provided.
     struct bad_required_options : public bad_parse
     {
     private:
@@ -124,7 +112,7 @@ namespace lwcli
 
     public:
         template<std::ranges::input_range Range>
-            requires std::is_same_v<std::ranges::range_value_t<Range>, std::string>
+            requires std::is_convertible_v<std::ranges::range_value_t<Range>, std::string>
         bad_required_options(const Range& missing_options):
             bad_parse("", _build_error_messasge(missing_options))
         {}
