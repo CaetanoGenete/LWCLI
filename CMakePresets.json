@@ -16,12 +16,24 @@
             }
         },
         {
-            "name": "MinGW",
+            "name": "gcc",
             "hidden": true,
             "binaryDir": "${sourceDir}/build/MinGW",
             "generator": "MinGW Makefiles",
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra"
+                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc"
+            }
+        },
+        {
+            "name": "clang",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/clang",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra",
+                "CMAKE_CXX_COMPILER": "clang"
             }
         },
         {
@@ -47,10 +59,19 @@
             ]
         },
         {
-            "name": "MinGW-debug-testAll",
-            "description": "MinGW debug build with tests enabled",
+            "name": "gcc-debug-testAll",
+            "description": "MinGW-gcc debug build with tests enabled",
             "inherits": [
-                "MinGW",
+                "gcc",
+                "testAll",
+                "debug"
+            ]
+        },
+        {
+            "name": "clang-debug-testAll",
+            "description": "Ninja-clang debug build with tests enabled",
+            "inherits": [
+                "clang",
                 "testAll",
                 "debug"
             ]
