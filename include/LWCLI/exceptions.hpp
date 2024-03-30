@@ -35,14 +35,14 @@ namespace lwcli
     {
     public:
         bad_positional_count(const std::string& failed_expression, size_t n_max_positional):
-            n_max_positional(n_max_positional),
             bad_parse(
                 failed_expression,
                 "Program expects at most " +
                 std::to_string(n_max_positional) +
                 " positional arguments, but at least " +
                 std::to_string(n_max_positional + 1) +
-                " were provided.")
+                " were provided."),
+            n_max_positional(n_max_positional)
         {}
 
         const size_t n_max_positional;
@@ -52,13 +52,13 @@ namespace lwcli
     struct bad_positional_conversion : public bad_parse
     {
         bad_positional_conversion(const _bad_cast& error_data):
-            value(error_data.value),
-            type(error_data.type_name),
             bad_parse(
                 error_data.value,
                 "No suitable conversion found to " +
                 error_data.type_name +
-                " type.")
+                " type."),
+            value(error_data.value),
+            type(error_data.type_name)
         {}
 
         const std::string value;
@@ -70,18 +70,16 @@ namespace lwcli
     struct bad_value_conversion : public bad_parse
     {
         bad_value_conversion(const std::string& key, const _bad_cast& error_data):
-            key(key),
-            value(error_data.value),
-            type(error_data.type_name),
             bad_parse(
                 key,
                 "No suitable conversion found from '" +
                 error_data.value +
                 "' to " + error_data.type_name +
-                " type.")
+                " type."),
+            value(error_data.value),
+            type(error_data.type_name)
         {}
 
-        const std::string key;
         const std::string value;
         const std::string type;
     };

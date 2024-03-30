@@ -1,4 +1,7 @@
+#include <iostream>
+
 #include "LWCLI/LWCLI.hpp"
+
 
 int main(int argc, const char** argv)
 {
