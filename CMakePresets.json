@@ -23,7 +23,7 @@
             "cacheVariables": {
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra",
                 "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_C_COMPILER": "gcc"
+                "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
             }
         },
         {
@@ -33,7 +33,7 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CXX_FLAGS": "-Werror -Wall -Wpedantic -Wconversion -Wextra",
-                "CMAKE_CXX_COMPILER": "clang"
+                "CMAKE_CXX_COMPILER": "clang++"
             }
         },
         {

@@ -28,7 +28,8 @@ set(LWCLI_PUBLIC_HEADERS
   "LWCLI.hpp"
   "options.hpp"
   "cast.hpp"
-  "type_utility.hpp")
+  "type_utility.hpp"
+  "exceptions.hpp")
 list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND include/LWCLI/)
 
 
