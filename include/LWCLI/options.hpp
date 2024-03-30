@@ -14,6 +14,7 @@
 
 #include "LWCLI/cast.hpp"
 #include "LWCLI/type_utility.hpp"
+#include "LWCLI/exceptions.hpp"
 
 namespace lwcli
 {
@@ -42,18 +43,6 @@ namespace lwcli
 
         unsigned int position;
         value_t value;
-    };
-
-    struct _bad_cast
-    {
-        const char* value;
-        std::string type_name;
-    };
-
-    struct bad_parse : public std::runtime_error
-    {
-        bad_parse(const std::string& message):
-            std::runtime_error("[FATAL] " + message) {}
     };
 
     void _on_match_flag(void* const count_ptr)
@@ -196,20 +185,10 @@ namespace lwcli
                     not_visted.erase(event.id.value);
                 }
                 else {
-                    if (position < max_positional) {
+                    if (position < max_positional)
                         event = _positional_events[position++];
-                    }
-                    else {
-                        std::stringstream ss;
-                        ss << "While parsing '"
-                            << *argv
-                            << "': program expects at most "
-                            << max_positional
-                            << " positional arguments, yet at least "
-                            << position + 1
-                            << " were provided.";
-                        throw bad_parse(ss.str());
-                    }
+                    else
+                        throw bad_positional_count(*argv, max_positional);
                 }
 
                 switch (event.id.type) {
@@ -218,13 +197,8 @@ namespace lwcli
                     break;
 
                 case _option_type::KEY_VALUE:
-                    if (++argv == argend) {
-                        std::stringstream ss;
-                        ss << "Option '"
-                            << *std::prev(argv)
-                            << "' expected an argument, but none were provided.";
-                        throw bad_parse(ss.str());
-                    }
+                    if (++argv == argend)
+                        throw bad_key_value_format(*std::prev(argv));
                     [[fallthrough]];
 
                 case _option_type::POSITIONAL:
@@ -232,23 +206,16 @@ namespace lwcli
                         std::invoke(event.on_match.unary, *argv, event.result_ptr);
                     }
                     catch (const _bad_cast& e) {
-                        std::stringstream ss;
-                        if (event.id.type == _option_type::KEY_VALUE) {
-                            ss << "While parsing '"
-                                << *std::prev(argv)
-                                << "': ";
-                        }
-                        ss << "No suitable conversion found from '"
-                            << e.value
-                            << "' to "
-                            << e.type_name;
-                        throw bad_parse(ss.str());
+                        if (event.id.type == _option_type::KEY_VALUE)
+                            throw bad_value_conversion(*std::prev(argv), e);
+                        else
+                            throw bad_positional_conversion(e);
                     }
                     break;
                 }
             }
 
-            if (!not_visted.empty()) {
+            if (!not_visted.empty()) [[unlikely]] {
                 std::unordered_map<_id_type::value_t, std::string> aliases;
                 for (const auto& [key, event] : _named_events) {
                     if (not_visted.contains(event.id.value)) {
@@ -258,13 +225,8 @@ namespace lwcli
                     }
                 }
 
-                std::stringstream ss;
-                ss << "Arguments:\n";
-                for (const std::string& arg_list : aliases | std::views::values)
-                    ss << "\t> " << arg_list << "\n";
-                ss << "were expected, but not provided.";
-                throw bad_parse(ss.str());
-            }
+                throw bad_required_options(aliases | std::views::values);
+                }
         }
 
     private:
