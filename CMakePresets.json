@@ -7,8 +7,18 @@
     },
     "configurePresets": [
         {
+            "name": "windows-only",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
             "name": "MSVC17",
             "hidden": true,
+            "inherits": "windows-only",
             "binaryDir": "${sourceDir}/build/MSVC",
             "generator": "Visual Studio 17 2022",
             "cacheVariables": {
@@ -16,8 +26,9 @@
             }
         },
         {
-            "name": "gcc",
+            "name": "MinGW",
             "hidden": true,
+            "inherits": "windows-only",
             "binaryDir": "${sourceDir}/build/MinGW",
             "generator": "MinGW Makefiles",
             "cacheVariables": {
@@ -59,10 +70,10 @@
             ]
         },
         {
-            "name": "gcc-debug-testAll",
+            "name": "MinGW-debug-testAll",
             "description": "MinGW-gcc debug build with tests enabled",
             "inherits": [
-                "gcc",
+                "MinGW",
                 "testAll",
                 "debug"
             ]
