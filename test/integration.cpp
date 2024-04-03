@@ -26,8 +26,12 @@
         parser.parse(argc, argv);
         return testing::AssertionSuccess();
     }
-    catch (...) {
-        return testing::AssertionFailure();
+    catch (const lwcli::bad_parse& e) {
+        return testing::AssertionFailure()
+            << "'"
+            << typeid(lwcli::bad_parse).name()
+            << "' exception thrown with mesasage: "
+            << e.what();
     }
 }
 
