@@ -49,6 +49,62 @@ template<std::ranges::contiguous_range RangeType>
     return parse_succeeds(parser, std::vector(std::begin(cstr_view), std::end(cstr_view)));
 }
 
+TEST(integration, all_options_types_happy)
+{
+    lwcli::FlagOption flag_option;
+    flag_option.aliases = { "-v" };
+
+    lwcli::KeyValueOption<int> key_value_option;
+    key_value_option.aliases = { "--value" };
+
+    lwcli::PositionalOption<double> positional_option;
+
+    lwcli::CLIParser parser;
+    parser.register_option(flag_option);
+    parser.register_option(key_value_option);
+    parser.register_option(positional_option);
+
+    constexpr auto value = "10";
+    constexpr auto positional = "0.31415926";
+    EXPECT_TRUE(parse_succeeds(parser, std::array{ "integration", "-v", "--value", value, positional }));
+
+    ASSERT_EQ(1, flag_option.count);
+    ASSERT_EQ(std::stoi(value), key_value_option.value);
+    ASSERT_EQ(std::stod(positional), positional_option.value);
+}
+
+
+TEST(interation, duplicate_flag_options_happy)
+{
+    lwcli::FlagOption flag_option;
+    flag_option.aliases = { "--value1", "--value2", "--value3" };
+
+    lwcli::FlagOption other_flag_option;
+    other_flag_option.aliases = { "--other-value" };
+
+    lwcli::CLIParser parser;
+    parser.register_option(flag_option);
+    parser.register_option(other_flag_option);
+
+    EXPECT_TRUE(parse_succeeds(parser, std::array{
+        "integration",
+        "--value1",
+        "--value1",
+        "--value2",
+        "--value2",
+        "--value2",
+        "--value3",
+        "--value3",
+        "--other-value",
+        "--value3",
+        "--value3" }
+    ));
+    ASSERT_EQ(9, flag_option.count);
+    ASSERT_EQ(1, other_flag_option.count);
+}
+
+/* Unhappy tests ---------------------------------------------------------------------------------------------------- */
+
 template<std::derived_from<lwcli::bad_parse> ExpectException>
 [[nodiscard]] testing::AssertionResult parse_fails(lwcli::CLIParser& parser, const std::string& args)
 {
@@ -76,30 +132,6 @@ template<std::derived_from<lwcli::bad_parse> ExpectException>
             << "'";
     }
     return testing::AssertionFailure() << "No exception was thrown";
-}
-
-TEST(integration, all_options_types_happy)
-{
-    lwcli::FlagOption flag_option;
-    flag_option.aliases = { "-v" };
-
-    lwcli::KeyValueOption<int> key_value_option;
-    key_value_option.aliases = { "--value" };
-
-    lwcli::PositionalOption<double> positional_option;
-
-    lwcli::CLIParser parser;
-    parser.register_option(flag_option);
-    parser.register_option(key_value_option);
-    parser.register_option(positional_option);
-
-    constexpr auto value = "10";
-    constexpr auto positional = "0.31415926";
-    EXPECT_TRUE(parse_succeeds(parser, std::array{ "integration", "-v", "--value", value, positional }));
-
-    ASSERT_EQ(1, flag_option.count);
-    ASSERT_EQ(std::stoi(value), key_value_option.value);
-    ASSERT_EQ(std::stod(positional), positional_option.value);
 }
 
 struct key_value_conversion_unhappy_tests : public testing::TestWithParam<std::string> {};
@@ -177,35 +209,6 @@ TEST_P(bad_key_value_format_unhappy_tests, bad_format)
     EXPECT_TRUE(parse_succeeds(parser, std::array{ "control", "--value1", "10", "--value2-1", "12.1" }));
     // Failing case:
     EXPECT_TRUE(parse_fails<lwcli::bad_key_value_format>(parser, GetParam()));
-}
-
-TEST(interation, duplicate_flag_options_happy)
-{
-    lwcli::FlagOption flag_option;
-    flag_option.aliases = { "--value1", "--value2", "--value3" };
-
-    lwcli::FlagOption other_flag_option;
-    other_flag_option.aliases = { "--other-value" };
-
-    lwcli::CLIParser parser;
-    parser.register_option(flag_option);
-    parser.register_option(other_flag_option);
-
-    EXPECT_TRUE(parse_succeeds(parser, std::array{
-        "integration",
-        "--value1",
-        "--value1",
-        "--value2",
-        "--value2",
-        "--value2",
-        "--value3",
-        "--value3",
-        "--other-value",
-        "--value3",
-        "--value3" }
-    ));
-    ASSERT_EQ(9, flag_option.count);
-    ASSERT_EQ(1, other_flag_option.count);
 }
 
 struct required_key_value_tests : public testing::TestWithParam<std::string> {};
