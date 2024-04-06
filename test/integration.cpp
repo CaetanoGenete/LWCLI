@@ -20,6 +20,8 @@
     return result;
 }
 
+/* Happy tests ------------------------------------------------------------------------------------------------------ */
+
 [[nodiscard]] testing::AssertionResult parse_succeeds(lwcli::CLIParser& parser, int argc, const char* const* argv)
 {
     try {

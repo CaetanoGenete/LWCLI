@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <string>
-#include <ranges>
+#include <ranges> // for access to std::ranges::input_range
 #include <sstream>
 
 namespace lwcli
@@ -65,7 +65,7 @@ namespace lwcli
     };
 
 
-    /// Exception thrown upon failure to convert from string to the expected type of a key-value argument.
+    /// Exception thrown upon failure to convert from string to the expected type of a key-value option.
     struct bad_value_conversion : public bad_parse
     {
         bad_value_conversion(const std::string& key, const _bad_cast& error_data):

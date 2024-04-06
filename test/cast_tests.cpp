@@ -1,7 +1,11 @@
 #include "gtest/gtest.h"
 
-#include "LWCLI/cast.hpp"
 #include <vector>
+#include <ranges>
+#include <algorithm>
+
+#include "LWCLI/cast.hpp"
+
 
 TEST(lwcli_tests, hello)
 {
@@ -30,6 +34,19 @@ INSTANTIATE_TEST_SUITE_P(
     StringCastTest,
     testing::Values("10", "", "--some-value", "-f", "something-else"));
 
+// template<class T>
+// struct ListCastTests : public testing::TestWithParam<std::vector<T>> {};
+
+// using IntListCastTest = ListCastTests<int>;
+
+// INSTANTIATE_TEST_SUITE_P(
+//     valid_int_lists,
+//     IntListCastTest,
+//     testing::Values(
+//         std::vector<int>(),
+//         std::vector<int>({ 10, 20, 30 })));
+
+
 TEST_P(IntCastTests, happy_int_casts)
 {
     int value;
@@ -49,4 +66,29 @@ TEST_P(StringCastTest, happy_string_casts)
     std::string value;
     ASSERT_NO_THROW({ value = lwcli::cast<std::string>::from_string(GetParam()); });
     ASSERT_EQ(value, std::string(GetParam()));
+}
+
+TEST(IntListCastTest, empty_vector_test)
+{
+    constexpr auto test_case = "";
+
+    using vec_t = std::vector<int>;
+    vec_t result;
+    ASSERT_NO_THROW({ result = lwcli::cast<vec_t>::from_string(test_case); });
+    ASSERT_EQ(0, result.size());
+}
+
+TEST(IntListCastTest, filled_vector_test)
+{
+    using vec_t = std::vector<int>;
+    const vec_t test_case = { 10, 20, 30, 40, 50 };
+
+    std::stringstream ss;
+    ss << test_case.front();
+    for (const auto& value : test_case | std::ranges::views::drop(1))
+        ss << ", " << value;
+
+    vec_t result;
+    ASSERT_NO_THROW({ result = lwcli::cast<vec_t>::from_string(ss.str()); });
+    ASSERT_EQ(test_case, result);
 }
