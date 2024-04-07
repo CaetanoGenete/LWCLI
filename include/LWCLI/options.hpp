@@ -39,7 +39,6 @@ namespace lwcli
     {
         using value_t = Type;
 
-        unsigned int position;
         value_t value;
     };
 

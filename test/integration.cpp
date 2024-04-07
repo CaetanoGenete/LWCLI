@@ -222,7 +222,6 @@ INSTANTIATE_TEST_SUITE_P(
         "integration --required1 10",
         "integration --required2 10"));
 
-
 TEST_P(required_key_value_tests, required_key_value_options_unhappy)
 {
     lwcli::KeyValueOption<int> required_1;

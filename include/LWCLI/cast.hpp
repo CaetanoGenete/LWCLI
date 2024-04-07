@@ -7,7 +7,6 @@
 
 namespace lwcli
 {
-
     template<class Type>
     struct cast;
 

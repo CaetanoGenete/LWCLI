@@ -6,7 +6,6 @@
 
 #include "LWCLI/cast.hpp"
 
-
 TEST(lwcli_tests, hello)
 {
     GTEST_ASSERT_TRUE(true);
@@ -24,29 +23,6 @@ INSTANTIATE_TEST_SUITE_P(
     IntCastTests,
     testing::Values("10", "0", "-26"));
 
-INSTANTIATE_TEST_SUITE_P(
-    valid_str_doubles,
-    DoubleCastTests,
-    testing::Values("10", "0.0", "-26.43"));
-
-INSTANTIATE_TEST_SUITE_P(
-    valid_str_strings,
-    StringCastTest,
-    testing::Values("10", "", "--some-value", "-f", "something-else"));
-
-// template<class T>
-// struct ListCastTests : public testing::TestWithParam<std::vector<T>> {};
-
-// using IntListCastTest = ListCastTests<int>;
-
-// INSTANTIATE_TEST_SUITE_P(
-//     valid_int_lists,
-//     IntListCastTest,
-//     testing::Values(
-//         std::vector<int>(),
-//         std::vector<int>({ 10, 20, 30 })));
-
-
 TEST_P(IntCastTests, happy_int_casts)
 {
     int value;
@@ -54,12 +30,22 @@ TEST_P(IntCastTests, happy_int_casts)
     ASSERT_EQ(value, std::stoi(GetParam()));
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    valid_str_doubles,
+    DoubleCastTests,
+    testing::Values("10", "0.0", "-26.43"));
+
 TEST_P(DoubleCastTests, happy_double_casts)
 {
     double value;
     ASSERT_NO_THROW({ value = lwcli::cast<double>::from_string(GetParam()); });
     ASSERT_EQ(value, std::stod(GetParam()));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    valid_str_strings,
+    StringCastTest,
+    testing::Values("10", "", "--some-value", "-f", "something-else"));
 
 TEST_P(StringCastTest, happy_string_casts)
 {
