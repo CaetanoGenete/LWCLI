@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
-#include <vector>
-#include <ranges>
 #include <algorithm>
+#include <ranges>
+#include <vector>
 
 #include "LWCLI/cast.hpp"
 
@@ -12,16 +12,14 @@ TEST(lwcli_tests, hello)
 }
 
 template<class T>
-struct CastTests : public testing::TestWithParam<const char*> {};
+struct CastTests : public testing::TestWithParam<const char*>
+{};
 
 using IntCastTests = CastTests<int>;
 using DoubleCastTests = CastTests<double>;
 using StringCastTest = CastTests<std::string>;
 
-INSTANTIATE_TEST_SUITE_P(
-    valid_str_ints,
-    IntCastTests,
-    testing::Values("10", "0", "-26"));
+INSTANTIATE_TEST_SUITE_P(valid_str_ints, IntCastTests, testing::Values("10", "0", "-26"));
 
 TEST_P(IntCastTests, happy_int_casts)
 {
@@ -30,10 +28,7 @@ TEST_P(IntCastTests, happy_int_casts)
     ASSERT_EQ(value, std::stoi(GetParam()));
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    valid_str_doubles,
-    DoubleCastTests,
-    testing::Values("10", "0.0", "-26.43"));
+INSTANTIATE_TEST_SUITE_P(valid_str_doubles, DoubleCastTests, testing::Values("10", "0.0", "-26.43"));
 
 TEST_P(DoubleCastTests, happy_double_casts)
 {
@@ -67,7 +62,7 @@ TEST(IntListCastTest, empty_vector_test)
 TEST(IntListCastTest, filled_vector_test)
 {
     using vec_t = std::vector<int>;
-    const vec_t test_case = { 10, 20, 30, 40, 50 };
+    const vec_t test_case = {10, 20, 30, 40, 50};
 
     std::stringstream ss;
     ss << test_case.front();

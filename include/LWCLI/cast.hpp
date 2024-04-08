@@ -1,79 +1,79 @@
 #ifndef LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
 #define LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
 
-#include <string>
 #include <concepts> // For access to std::floating_point
+#include <string>
 #include <vector>
 
 namespace lwcli
 {
-    template<class Type>
-    struct cast;
+template<class Type>
+struct cast;
 
-    /* String casts ------------------------------------------------------------------------------------------------- */
+/* String casts ------------------------------------------------------------------------------------------------- */
 
-    template<>
-    struct cast<std::string>
+template<>
+struct cast<std::string>
+{
+    [[nodiscard]] constexpr static std::string from_string(const std::string& str) noexcept
     {
-        [[nodiscard]] constexpr static std::string from_string(const std::string& str) noexcept
-        {
-            return str;
-        }
-    };
+        return str;
+    }
+};
 
-    /* Numeric casts ------------------------------------------------------------------------------------------------ */
+/* Numeric casts ------------------------------------------------------------------------------------------------ */
 
-    //TODO: Perhaps call each sto[x] function independentaly
-    template<std::floating_point FPType>
-    struct cast<FPType>
+// TODO: Perhaps call each sto[x] function independentaly
+template<std::floating_point FPType>
+struct cast<FPType>
+{
+    [[nodiscard]] constexpr static FPType from_string(const std::string& str)
     {
-        [[nodiscard]] constexpr static FPType from_string(const std::string& str)
-        {
-            return static_cast<FPType>(std::stold(str));
-        }
-    };
+        return static_cast<FPType>(std::stold(str));
+    }
+};
 
-    template<std::unsigned_integral UIType>
-    struct cast<UIType>
+template<std::unsigned_integral UIType>
+struct cast<UIType>
+{
+    [[nodiscard]] constexpr static UIType from_string(const std::string& str)
     {
-        [[nodiscard]] constexpr static UIType from_string(const std::string& str)
-        {
-            return static_cast<UIType>(std::stoull(str));
-        }
-    };
+        return static_cast<UIType>(std::stoull(str));
+    }
+};
 
-    template<std::signed_integral SIType>
-    struct cast<SIType>
+template<std::signed_integral SIType>
+struct cast<SIType>
+{
+    [[nodiscard]] constexpr static SIType from_string(const std::string& str)
     {
-        [[nodiscard]] constexpr static SIType from_string(const std::string& str)
-        {
-            return static_cast<SIType>(std::stoll(str));
-        }
-    };
+        return static_cast<SIType>(std::stoll(str));
+    }
+};
 
-    /* Misc casts --------------------------------------------------------------------------------------------------- */
+/* Misc casts --------------------------------------------------------------------------------------------------- */
 
-    template<class Type, class Alloc>
-    struct cast<std::vector<Type, Alloc>>
+template<class Type, class Alloc>
+struct cast<std::vector<Type, Alloc>>
+{
+    [[nodiscard]] constexpr static std::vector<Type, Alloc> from_string(const std::string& str)
     {
-        [[nodiscard]] constexpr static std::vector<Type, Alloc> from_string(const std::string& str)
-        {
-            constexpr auto delim = ',';
+        constexpr auto delim = ',';
 
-            std::vector<Type> result;
-            if (!str.empty()) {
-                size_t substr_begin = 0;
-                for (size_t curr = 0; curr < str.size(); ++curr) {
-                    if (str[curr] == delim) {
-                        result.push_back(cast<Type>::from_string(str.substr(substr_begin, curr - substr_begin)));
-                        substr_begin = curr + 1;
-                    }
+        std::vector<Type> result;
+        if (!str.empty()) {
+            size_t substr_begin = 0;
+            for (size_t curr = 0; curr < str.size(); ++curr) {
+                if (str[curr] == delim) {
+                    result.push_back(cast<Type>::from_string(str.substr(substr_begin, curr - substr_begin)));
+                    substr_begin = curr + 1;
                 }
-                result.push_back(cast<Type>::from_string(str.substr(substr_begin)));
             }
-            return result;
+            result.push_back(cast<Type>::from_string(str.substr(substr_begin)));
         }
-    };
-}
+        return result;
+    }
+};
+} // namespace lwcli
 
 #endif // LWCLI_INCLUDE_LWCLI_CAST_STRING_HPP
