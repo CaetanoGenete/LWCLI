@@ -110,6 +110,7 @@ template<std::derived_from<lwcli::bad_parse> ExpectException>
     const std::vector<std::string> arg_list = split_args(args);
     const auto cstr_view = arg_list | std::views::transform(&std::string::c_str);
     const auto cstr_args = std::vector(std::begin(cstr_view), std::end(cstr_view));
+
     try {
         parser.parse(static_cast<int>(std::size(cstr_args)), std::data(cstr_args));
     }

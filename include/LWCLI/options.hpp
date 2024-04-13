@@ -22,6 +22,7 @@ struct FlagOption
     using count_t = unsigned int;
 
     std::vector<std::string> aliases;
+    std::string description;
     count_t count = 0;
 };
 
@@ -31,6 +32,7 @@ struct KeyValueOption
     using value_t = Type;
 
     std::vector<std::string> aliases;
+    std::string description;
     value_t value;
 };
 
@@ -39,6 +41,8 @@ struct PositionalOption
 {
     using value_t = Type;
 
+    std::string name;
+    std::string description;
     value_t value;
 };
 
@@ -104,6 +108,7 @@ private:
         const _on_match_t on_match,
         void* const result)
     {
+        assert(!aliases.empty() && "Named options must define atleast one identifier.");
         _named_events.reserve(_named_events.size() + aliases.size());
 
         const auto id = _new_id(type);

@@ -19,6 +19,14 @@ AlignOperands: Align
 BreakBeforeBinaryOperators: All
 BreakBeforeTernaryOperators: true
 
+# Numeric literals --------------------------------------------------------------------------------------------------- #
+
+IntegerLiteralSeparator:
+  Binary: 8
+  Decimal: 3
+  DecimalMinDigits: 5
+  Hex: -1
+
 # Parameter/argumet alignment ---------------------------------------------------------------------------------------- #
 
 AlignAfterOpenBracket: AlwaysBreak
@@ -33,20 +41,20 @@ AllowShortFunctionsOnASingleLine: Empty
 
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterNamespace: true
-    # Classes
-    AfterClass: true
-    AfterStruct: true
-    AfterUnion: true
-    SplitEmptyRecord: false
-    # Functions
-    AfterFunction: true
-    BeforeLambdaBody: false
-    SplitEmptyFunction: false
-    # Control flows
-    BeforeElse: true
-    BeforeWhile: true
-    BeforeCatch: true
+  AfterNamespace: true
+  # Classes
+  AfterClass: true
+  AfterStruct: true
+  AfterUnion: true
+  SplitEmptyRecord: false
+  # Functions
+  AfterFunction: true
+  BeforeLambdaBody: false
+  SplitEmptyFunction: false
+  # Control flows
+  BeforeElse: true
+  BeforeWhile: true
+  BeforeCatch: true
 
 # Templates/concepts ------------------------------------------------------------------------------------------------- #
 
@@ -77,3 +85,27 @@ AlignEscapedNewlines: Right
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
 SeparateDefinitionBlocks: Always
+EmptyLineBeforeAccessModifier: LogicalBlock
+InsertNewlineAtEOF: true
+
+# Includes ----------------------------------------------------------------------------------------------------------- #
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  # gtest
+  - Regex:         '^(<|")(gtest|gmock)/'
+    Priority:      1
+    CaseSensitive: true
+  # Standard library headers (hopefully)
+  - Regex:         '<[a-zA-Z0-9_]+>'
+    Priority:      2
+    # Project headers
+  - Regex:         '^"LWCLI/'
+    Priority:      3
+    CaseSensitive: true
+
+# Comments ----------------------------------------------------------------------------------------------------------- #
+
+SpacesInLineCommentPrefix:
+  Maximum: 1
+  Minimum: 1
