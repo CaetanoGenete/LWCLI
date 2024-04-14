@@ -22,7 +22,7 @@ struct FlagOption
     using count_t = unsigned int;
 
     std::vector<std::string> aliases;
-    std::string description;
+    std::string description{};
     count_t count = 0;
 };
 
@@ -32,8 +32,8 @@ struct KeyValueOption
     using value_t = Type;
 
     std::vector<std::string> aliases;
-    std::string description;
-    value_t value;
+    std::string description{};
+    value_t value{};
 };
 
 template<class Type>
@@ -42,8 +42,8 @@ struct PositionalOption
     using value_t = Type;
 
     std::string name;
-    std::string description;
-    value_t value;
+    std::string description{};
+    value_t value{};
 };
 
 void _on_match_flag(void* const count_ptr)
@@ -90,6 +90,8 @@ private:
     {
         _id_type id;
         _on_match_t on_match;
+
+        const std::string* description;
         void* result_ptr;
     };
 
@@ -106,6 +108,7 @@ private:
         const _option_type type,
         const std::vector<std::string>& aliases,
         const _on_match_t on_match,
+        const std::string* const description,
         void* const result)
     {
         assert(!aliases.empty() && "Named options must define atleast one identifier.");
@@ -116,12 +119,13 @@ private:
 #ifndef LWCLI_DO_NOT_ENFORCE_PREFIXES
             assert(key.starts_with("-") || key.starts_with("--"));
 #endif // LWCLI_DO_NOT_ENFORCE_PREFIXES
+            assert(key.find(' ') == std::string::npos && "Aliases should contain no spaces.");
             assert(!_named_events.contains(key));
 
             _named_events.emplace(
                 std::piecewise_construct,
                 std::make_tuple(key),
-                std::make_tuple(id, on_match, result));
+                std::make_tuple(id, on_match, description, result));
         }
         return id;
     }
@@ -132,9 +136,8 @@ public:
         _register_named(
             _option_type::FLAG,
             option.aliases,
-            {
-                .nullary = _on_match_flag,
-            },
+            {.nullary = _on_match_flag},
+            &option.description,
             &option.count);
 
         return *this;
@@ -146,9 +149,8 @@ public:
         const _id_type id = _register_named(
             _option_type::KEY_VALUE,
             option.aliases,
-            {
-                .unary = _on_match_valued<Type>,
-            },
+            {.unary = _on_match_valued<Type>},
+            &option.description,
             &option.value);
 
         if constexpr (!lwcli::is_optional_v<Type>)
@@ -162,10 +164,10 @@ public:
     {
         _positional_events.emplace_back(
             _new_id(_option_type::POSITIONAL),
-            _on_match_t{
-                .unary = _on_match_valued<Type>,
-            },
+            _on_match_t{.unary = _on_match_valued<Type>},
+            &option.description,
             &option.value);
+
         return *this;
     }
 

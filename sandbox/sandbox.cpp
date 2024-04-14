@@ -4,11 +4,15 @@
 
 int main(int argc, const char** argv)
 {
-    lwcli::FlagOption _option1;
-    _option1.aliases = {"-v", "--verbose"};
+    lwcli::FlagOption _option1{
+        .aliases = {"-v", "--verbose"},
+        .description = "This does something actually usedful",
+    };
 
-    lwcli::KeyValueOption<int> _option2;
-    _option2.aliases = {"--value"};
+    lwcli::KeyValueOption<int> _option2{
+        .aliases = {"--value"},
+        .description = "This does something useful lol.",
+    };
 
     lwcli::CLIParser parser;
     parser.register_option(_option1);
