@@ -13,6 +13,7 @@
 #include "LWCLI/cast.hpp"
 #include "LWCLI/exceptions.hpp"
 #include "LWCLI/type_utility.hpp"
+#include "LWCLI/unreachable.hpp"
 
 namespace lwcli
 {
@@ -41,7 +42,7 @@ struct PositionalOption
 {
     using value_t = Type;
 
-    std::string name;
+    std::string name{};
     std::string description{};
     value_t value{};
 };
@@ -130,8 +131,7 @@ private:
         case _option_type::POSITIONAL:
             return _id_type{type, static_cast<_id_type::value_t>(_positional_events.size()) & value_mask};
         default:
-            assert(false && "This should be unreachable!");
-            return {};
+            unreachable();
         }
     }
 
@@ -227,16 +227,15 @@ public:
         }
 
         if (!not_visted.empty()) [[unlikely]] {
-            // std::unordered_map<_id_type::value_t, std::string> aliases;
-            // for (const auto& [key, event] : _named_events) {
-            //     if (not_visted.contains(event.id.value)) {
-            //         auto [loc, success] = aliases.try_emplace(event.id.value, key);
-            //         if (!success)
-            //             loc->second += " | " + key;
-            //     }
-            // }
-            throw bad_required_options(std::vector<std::string>());
-            // throw bad_required_options(aliases | std::views::values);
+            std::unordered_map<_id_type::value_t, std::string> aliases;
+            for (const auto& [alias, id] : _alias_to_event) {
+                if (not_visted.contains(id)) {
+                    auto [loc, success] = aliases.try_emplace(id, alias);
+                    if (!success)
+                        loc->second += " | " + alias;
+                }
+            }
+            throw bad_required_options(aliases | std::views::values);
         }
     }
 
