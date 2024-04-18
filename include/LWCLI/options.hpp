@@ -95,7 +95,8 @@ private:
     {
         _id_type id;
         _on_match_t on_match;
-        void* result_ptr;
+        std::string* description;
+        void* result;
     };
 
 private:
@@ -119,9 +120,9 @@ private:
     }
 
 private:
-    _id_type _new_id(_option_type type)
+    [[nodiscard]] _id_type _new_id(_option_type type)
     {
-        // Note: mask here is to stop G++ from throwing a fit over narrowing conversions.
+        // Note: mask here to stop G++ from throwing a fit over narrowing conversions to bit-field.
         constexpr unsigned value_mask = (1 << _id_type::nvalue_bits) - 1;
 
         switch (type) {
@@ -131,7 +132,7 @@ private:
         case _option_type::POSITIONAL:
             return _id_type{type, static_cast<_id_type::value_t>(_positional_events.size()) & value_mask};
         default:
-            unreachable();
+            _unreachable();
         }
     }
 
@@ -141,9 +142,10 @@ public:
         const auto id = _new_id(_option_type::FLAG);
         _register_named(
             _match_event{
-                id,
-                {.nullary = _on_match_flag},
-                &option.count,
+                .id = id,
+                .on_match = {.nullary = _on_match_flag},
+                .description = &option.description,
+                .result = &option.count,
             },
             option.aliases);
 
@@ -156,9 +158,10 @@ public:
         const auto id = _new_id(_option_type::KEY_VALUE);
         _register_named(
             _match_event{
-                id,
-                {.unary = _on_match_valued<Type>},
-                &option.value,
+                .id = id,
+                .on_match = {.unary = _on_match_valued<Type>},
+                .description = &option.description,
+                .result = &option.value,
             },
             option.aliases);
 
@@ -176,14 +179,38 @@ public:
             _on_match_t{
                 .unary = _on_match_valued<Type>,
             },
+            &option.description,
             &option.value);
 
         return *this;
     }
 
+private:
+    void _build_help_message()
+    {
+        std::vector<std::string> cs_aliases_list(_named_events.size());
+        for (const auto& [alias, id] : _alias_to_event) {
+            auto& cs_aliases = cs_aliases_list[id];
+            if (cs_aliases.empty())
+                cs_aliases = alias;
+            else
+                cs_aliases += ", " + alias;
+        }
+
+        for (_id_type::value_t id = 0; id < cs_aliases_list.size(); ++id) {
+            std::puts(cs_aliases_list[id].c_str());
+            std::putchar('\t');
+        }
+    }
+
 public:
     void parse(const int argc, const char* const* argv)
     {
+        if (argc == 1) {
+            _build_help_message();
+            std::exit(0);
+        }
+
         const size_t max_positional = _positional_events.size();
 
         std::unordered_set not_visted(std::begin(_required_events), std::end(_required_events));
@@ -195,6 +222,10 @@ public:
                 event = _named_events[loc->second];
                 not_visted.erase(event.id.value);
             }
+            else if (std::strcmp(*argv, "-h") == 0 || std::strcmp(*argv, "--help") == 0) {
+                _build_help_message();
+                std::exit(0);
+            }
             else {
                 if (position < max_positional)
                     event = _positional_events[position++];
@@ -204,7 +235,7 @@ public:
 
             switch (event.id.type) {
             case _option_type::FLAG:
-                std::invoke(event.on_match.nullary, event.result_ptr);
+                std::invoke(event.on_match.nullary, event.result);
                 break;
 
             case _option_type::KEY_VALUE:
@@ -214,7 +245,7 @@ public:
 
             case _option_type::POSITIONAL:
                 try {
-                    std::invoke(event.on_match.unary, *argv, event.result_ptr);
+                    std::invoke(event.on_match.unary, *argv, event.result);
                 }
                 catch (const _bad_cast& e) {
                     if (event.id.type == _option_type::KEY_VALUE)

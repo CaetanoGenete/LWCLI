@@ -6,17 +6,19 @@
 namespace lwcli
 {
 
-[[noreturn]] inline void unreachable()
+[[noreturn]] inline void _unreachable()
 {
 #ifdef __cpp_lib_unreachable
     std::unreachable();
 #else
-#ifdef __GNUC__         // GCC, Clang, ICC
+    #ifdef __GNUC__         // GCC, Clang, ICC
     __builtin_unreachable();
-#elif defined(_MSC_VER) // MSVC
+    #elif defined(_MSC_VER) // MSVC
     __assume(false);
+    #endif
 #endif
-#endif
+    // Note: If neither __GNUC__ or _MSC_VER is defined, then this function will still trigger undefined behaviour due
+    // to the [[noreturn]]
 }
 
 } // namespace lwcli
