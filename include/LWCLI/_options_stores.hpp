@@ -23,7 +23,7 @@ public:
     friend struct ::std::hash<_named_id>;
     friend class _named_option_store;
 
-    enum class Type {
+    enum class Type : uint8_t {
         FLAG,
         KEY_VALUE,
     };
