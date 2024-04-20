@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <ranges>
 #include <string>
@@ -47,14 +48,66 @@ struct PositionalOption
     value_t value{};
 };
 
-void _on_match_flag(void* const count_ptr)
+class _named_option_store;
+
+struct _named_id
 {
-    auto& count = *static_cast<FlagOption::count_t*>(count_ptr);
-    ++count;
-}
+public:
+    friend struct ::std::hash<_named_id>;
+    friend class _named_option_store;
+
+    enum class Type {
+        FLAG,
+        KEY_VALUE,
+    };
+
+    using value_t = unsigned int;
+
+public:
+    constexpr _named_id() noexcept:
+        _type(),
+        _index(static_cast<value_t>(-1))
+    {}
+
+private:
+    _named_id(const Type type, const value_t index) noexcept:
+        _type(type),
+        _index(index)
+    {}
+
+public:
+    [[nodiscard]] Type type() const noexcept
+    {
+        return _type;
+    }
+
+    [[nodiscard]] bool operator!=(const _named_id&) const noexcept = default;
+    [[nodiscard]] bool operator==(const _named_id&) const noexcept = default;
+
+private:
+    Type _type;
+    value_t _index;
+};
+
+// Note: all default constructed `_named_id`s are marked as invalid.
+constexpr _named_id _invalid_id{};
+
+} // namespace lwcli
+
+template<>
+struct std::hash<lwcli::_named_id>
+{
+    [[nodiscard]] std::size_t operator()(const lwcli::_named_id& s) const noexcept
+    {
+        return std::hash<lwcli::_named_id::value_t>{}(s._index);
+    }
+};
+
+namespace lwcli
+{
 
 template<class Type>
-void _on_match_valued(const char* value, void* const result_ptr)
+void _on_invoke_valued_option(const char* const value, void* const result_ptr)
 {
     using naked_type = unwrapped_t<Type>;
     try {
@@ -65,108 +118,127 @@ void _on_match_valued(const char* value, void* const result_ptr)
     }
 }
 
-class CLIParser
+struct _erased_valued_option
+{
+    void* result;
+    void (*callback)(const char*, void*);
+};
+
+class _named_option_store
 {
 private:
-    union _on_match_t
-    {
-        void (*nullary)(void*);
-        void (*unary)(const char*, void*);
-    };
-
-    enum class _option_type : uint8_t {
-        FLAG,
-        KEY_VALUE,
-        POSITIONAL,
-    };
-
-    struct _id_type
-    {
-        using value_t = uint32_t;
-
-        static constexpr uint8_t ntype_bits = 2;
-        static constexpr uint8_t nvalue_bits = sizeof(value_t) * 8 - ntype_bits;
-
-        _option_type type : ntype_bits;
-        value_t value : nvalue_bits;
-    };
-
-    struct _match_event
-    {
-        _id_type id;
-        _on_match_t on_match;
-        std::string* description;
-        void* result;
-    };
-
-private:
-    void _register_named(_match_event&& event, const std::vector<std::string>& aliases)
+    void _register_aliases(const _named_id id, const std::vector<std::string>& aliases)
     {
         assert(!aliases.empty() && "Named options must define atleast one identifier.");
 
-        _named_events.push_back(event);
-
-        _alias_to_event.reserve(_alias_to_event.size() + aliases.size());
+        _alias_to_id.reserve(_alias_to_id.size() + aliases.size());
         for (const auto& alias : aliases) {
 #ifndef LWCLI_DO_NOT_ENFORCE_PREFIXES
             assert(alias.starts_with("-") || alias.starts_with("--"));
 #endif // LWCLI_DO_NOT_ENFORCE_PREFIXES
 
-            assert(!_alias_to_event.contains(alias) && "Duplicate option alias detected.");
+            assert(!_alias_to_id.contains(alias) && "Duplicate option alias detected.");
             assert(alias.find(' ') == std::string::npos && "Aliases should contain no spaces.");
 
-            _alias_to_event.emplace(alias, static_cast<_id_type::value_t>(event.id.value));
-        }
-    }
-
-private:
-    [[nodiscard]] _id_type _new_id(_option_type type)
-    {
-        // Note: mask here to stop G++ from throwing a fit over narrowing conversions to bit-field.
-        constexpr unsigned value_mask = (1 << _id_type::nvalue_bits) - 1;
-
-        switch (type) {
-        case _option_type::FLAG:
-        case _option_type::KEY_VALUE:
-            return _id_type{type, static_cast<_id_type::value_t>(_named_events.size()) & value_mask};
-        case _option_type::POSITIONAL:
-            return _id_type{type, static_cast<_id_type::value_t>(_positional_events.size()) & value_mask};
-        default:
-            _unreachable();
+            _alias_to_id.emplace(alias, id);
         }
     }
 
 public:
-    CLIParser& register_option(FlagOption& option)
+    void register_flag(FlagOption& option) noexcept
     {
-        const auto id = _new_id(_option_type::FLAG);
-        _register_named(
-            _match_event{
-                .id = id,
-                .on_match = {.nullary = _on_match_flag},
-                .description = &option.description,
-                .result = &option.count,
-            },
+        _register_aliases(
+            _named_id(_named_id::Type::FLAG, static_cast<_named_id::value_t>(_flag_count_ptrs.size())),
             option.aliases);
 
+        _flag_count_ptrs.push_back(&option.count);
+    }
+
+    template<class Type>
+    [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option) noexcept
+    {
+        const _named_id id(_named_id::Type::KEY_VALUE, static_cast<_named_id::value_t>(_key_value_options.size()));
+        _register_aliases(id, option.aliases);
+
+        _key_value_options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
+        return id;
+    }
+
+public:
+    [[nodiscard]] _named_id id_of(const std::string& alias) const
+    {
+        const auto loc = _alias_to_id.find(alias);
+        return loc != _alias_to_id.end() ? loc->second : _invalid_id;
+    }
+
+    void invoke_flag_option(const _named_id id) const noexcept
+    {
+        assert(id.type() == _named_id::Type::FLAG);
+
+        ++*static_cast<FlagOption::count_t*>(_flag_count_ptrs[id._index]);
+    }
+
+    void invoke_key_value_option(const _named_id id, const char* const value) const noexcept(false)
+    {
+        assert(id.type() == _named_id::Type::KEY_VALUE);
+
+        const auto option = _key_value_options[id._index];
+        // Note: this is expected to throw lwcli::_bad_cast
+        std::invoke(option.callback, value, option.result);
+    }
+
+public:
+    [[nodiscard]] std::unordered_map<std::string, _named_id> alias_to_id() const noexcept
+    {
+        return _alias_to_id;
+    }
+
+private:
+    std::vector<void*> _flag_count_ptrs;
+    std::vector<_erased_valued_option> _key_value_options;
+    std::unordered_map<std::string, _named_id> _alias_to_id;
+};
+
+class _positional_options_store
+{
+public:
+    template<class Type>
+    void register_option(PositionalOption<Type>& option) noexcept
+    {
+        _options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
+    }
+
+    void invoke_at(const size_t position, const char* const value) const noexcept(false)
+    {
+        const auto max_positional = _options.size();
+        if (position < max_positional) {
+            const auto option = _options[position];
+            // Note: this is expected to throw lwcli::_bad_cast
+            std::invoke(option.callback, value, option.result);
+        }
+        else
+            throw bad_positional_count(value, max_positional);
+    }
+
+private:
+    std::vector<_erased_valued_option> _options;
+};
+
+class CLIParser
+{
+public:
+    CLIParser& register_option(FlagOption& option)
+    {
+        _named_options.register_flag(option);
         return *this;
     }
 
     template<class Type>
     CLIParser& register_option(KeyValueOption<Type>& option)
     {
-        const auto id = _new_id(_option_type::KEY_VALUE);
-        _register_named(
-            _match_event{
-                .id = id,
-                .on_match = {.unary = _on_match_valued<Type>},
-                .description = &option.description,
-                .result = &option.value,
-            },
-            option.aliases);
-
-        if constexpr (!lwcli::is_optional_v<Type>)
-            _required_events.push_back(id.value);
+        const _named_id id = _named_options.register_key_value(option);
+        if constexpr (!is_optional_v<Type>)
+            _required_options.push_back(id);
 
         return *this;
     }
@@ -174,94 +246,57 @@ public:
     template<class Type>
     CLIParser& register_option(PositionalOption<Type>& option)
     {
-        _positional_events.emplace_back(
-            _new_id(_option_type::POSITIONAL),
-            _on_match_t{
-                .unary = _on_match_valued<Type>,
-            },
-            &option.description,
-            &option.value);
-
+        _positional_options.register_option(option);
         return *this;
-    }
-
-private:
-    void _build_help_message()
-    {
-        std::vector<std::string> cs_aliases_list(_named_events.size());
-        for (const auto& [alias, id] : _alias_to_event) {
-            auto& cs_aliases = cs_aliases_list[id];
-            if (cs_aliases.empty())
-                cs_aliases = alias;
-            else
-                cs_aliases += ", " + alias;
-        }
-
-        for (_id_type::value_t id = 0; id < cs_aliases_list.size(); ++id) {
-            std::puts(cs_aliases_list[id].c_str());
-            std::putchar('\t');
-        }
     }
 
 public:
     void parse(const int argc, const char* const* argv)
     {
-        if (argc == 1) {
-            _build_help_message();
-            std::exit(0);
-        }
-
-        const size_t max_positional = _positional_events.size();
-
-        std::unordered_set not_visted(std::begin(_required_events), std::end(_required_events));
+        std::unordered_set not_visted(std::begin(_required_options), std::end(_required_options));
 
         const auto argend = argv + argc;
         for (size_t position = 0; ++argv != argend;) {
-            _match_event event;
-            if (const auto loc = _alias_to_event.find(*argv); loc != _alias_to_event.end()) {
-                event = _named_events[loc->second];
-                not_visted.erase(event.id.value);
+            // Named option
+            if (const auto id = _named_options.id_of(*argv); id != _invalid_id) {
+                not_visted.erase(id);
+                switch (id.type()) {
+                case _named_id::Type::FLAG:
+                    _named_options.invoke_flag_option(id);
+                    break;
+
+                case _named_id::Type::KEY_VALUE:
+                    if (++argv == argend)
+                        throw bad_key_value_format(*std::prev(argv));
+
+                    try {
+                        _named_options.invoke_key_value_option(id, *argv);
+                        break;
+                    }
+                    catch (const _bad_cast& e) {
+                        throw bad_value_conversion(*std::prev(argv), e);
+                    }
+
+                default:
+                    _unreachable();
+                }
             }
-            else if (std::strcmp(*argv, "-h") == 0 || std::strcmp(*argv, "--help") == 0) {
-                _build_help_message();
-                std::exit(0);
-            }
+            // Positional option
             else {
-                if (position < max_positional)
-                    event = _positional_events[position++];
-                else
-                    throw bad_positional_count(*argv, max_positional);
-            }
-
-            switch (event.id.type) {
-            case _option_type::FLAG:
-                std::invoke(event.on_match.nullary, event.result);
-                break;
-
-            case _option_type::KEY_VALUE:
-                if (++argv == argend)
-                    throw bad_key_value_format(*std::prev(argv));
-                [[fallthrough]];
-
-            case _option_type::POSITIONAL:
                 try {
-                    std::invoke(event.on_match.unary, *argv, event.result);
+                    _positional_options.invoke_at(position++, *argv);
                 }
                 catch (const _bad_cast& e) {
-                    if (event.id.type == _option_type::KEY_VALUE)
-                        throw bad_value_conversion(*std::prev(argv), e);
-                    else
-                        throw bad_positional_conversion(e);
+                    throw bad_positional_conversion(e);
                 }
-                break;
             }
         }
 
         if (!not_visted.empty()) [[unlikely]] {
-            std::unordered_map<_id_type::value_t, std::string> aliases;
-            for (const auto& [alias, id] : _alias_to_event) {
+            std::unordered_map<_named_id, std::string> aliases;
+            for (const auto& [alias, id] : _named_options.alias_to_id()) {
                 if (not_visted.contains(id)) {
-                    auto [loc, success] = aliases.try_emplace(id, alias);
+                    const auto [loc, success] = aliases.try_emplace(id, alias);
                     if (!success)
                         loc->second += " | " + alias;
                 }
@@ -271,11 +306,10 @@ public:
     }
 
 private:
-    std::vector<_match_event> _named_events;
-    std::vector<_match_event> _positional_events;
-    std::vector<_id_type::value_t> _required_events;
+    _named_option_store _named_options;
+    _positional_options_store _positional_options;
 
-    std::unordered_map<std::string, _id_type::value_t> _alias_to_event;
+    std::vector<_named_id> _required_options;
 };
 
 } // namespace lwcli

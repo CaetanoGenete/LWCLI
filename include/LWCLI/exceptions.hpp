@@ -48,7 +48,7 @@ public:
 /// Exception thrown upon failure to convert from string to the expected type of a positional argument.
 struct bad_positional_conversion : public bad_parse
 {
-    bad_positional_conversion(const _bad_cast& error_data):
+    explicit bad_positional_conversion(const _bad_cast& error_data):
         bad_parse(error_data.value, "No suitable conversion found to " + error_data.type_name + " type."),
         value(error_data.value),
         type(error_data.type_name)
@@ -77,7 +77,7 @@ struct bad_value_conversion : public bad_parse
 /// argument passed.
 struct bad_key_value_format : public bad_parse
 {
-    bad_key_value_format(const std::string& key):
+    explicit bad_key_value_format(const std::string& key):
         bad_parse(key, "Expected a value, but none were provided")
     {}
 };
@@ -100,7 +100,7 @@ private:
 public:
     template<std::ranges::input_range Range>
     requires std::is_convertible_v<std::ranges::range_value_t<Range>, std::string>
-    bad_required_options(const Range& missing_options):
+    explicit bad_required_options(const Range& missing_options):
         bad_parse("", _build_error_messasge(missing_options))
     {}
 };
