@@ -32,7 +32,7 @@ public:
 
 public:
     constexpr _named_id() noexcept:
-        _type(),
+        _type(Type::FLAG),
         _index(static_cast<value_t>(-1))
     {}
 

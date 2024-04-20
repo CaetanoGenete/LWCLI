@@ -22,7 +22,7 @@
             "binaryDir": "${sourceDir}/build/MSVC",
             "generator": "Visual Studio 17 2022",
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "/W4 /WX /EHsc"
+                "CMAKE_CXX_FLAGS": "/W4 /WX /EHsc /sdl /INCREMENTAL:NO /fsanitize=address"
             }
         },
         {
