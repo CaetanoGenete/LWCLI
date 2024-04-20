@@ -30,7 +30,8 @@ set(LWCLI_PUBLIC_HEADERS
   "cast.hpp"
   "type_utility.hpp"
   "exceptions.hpp"
-  "unreachable.hpp")
+  "unreachable.hpp"
+  "_options_stores.hpp")
 list(TRANSFORM LWCLI_PUBLIC_HEADERS PREPEND include/LWCLI/)
 
 

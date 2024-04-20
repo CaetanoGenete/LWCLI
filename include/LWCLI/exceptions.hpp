@@ -1,6 +1,7 @@
 #ifndef LWCLI_INCLUDE_LWCLI_EXCEPTIONS_HPP
 #define LWCLI_INCLUDE_LWCLI_EXCEPTIONS_HPP
 
+#include <cstdint>
 #include <ranges> // for access to std::ranges::input_range
 #include <sstream>
 #include <stdexcept>
