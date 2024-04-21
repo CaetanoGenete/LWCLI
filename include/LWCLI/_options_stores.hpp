@@ -1,12 +1,12 @@
 #ifndef LWCLI_INCLUDE_LWCLI_OPTIONS_STORES_HPP
 #define LWCLI_INCLUDE_LWCLI_OPTIONS_STORES_HPP
 
-#include <cassert>
-#include <cstdint>
-#include <functional>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <cassert>       // For access to assert
+#include <cstdint>       // For access to size_t
+#include <functional>    // For access to std::invoke
+#include <string>        // For access to std::string
+#include <unordered_map> // For access to std::unordered_map
+#include <vector>        // For access to std::vector
 
 #include "LWCLI/cast.hpp"
 #include "LWCLI/exceptions.hpp"

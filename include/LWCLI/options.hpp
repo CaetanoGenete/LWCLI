@@ -1,8 +1,8 @@
 #ifndef LWCLI_INCLUDE_LWCLI_OPTIONS_HPP
 #define LWCLI_INCLUDE_LWCLI_OPTIONS_HPP
 
-#include <string>
-#include <vector>
+#include <string> // For access to std::string
+#include <vector> // For access to std::
 
 namespace lwcli
 {

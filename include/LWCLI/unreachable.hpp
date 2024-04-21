@@ -1,7 +1,7 @@
 #ifndef LWCLI_INCLUDE_LWCLI_UNREACHABLE_HPP
 #define LWCLI_INCLUDE_LWCLI_UNREACHABLE_HPP
 
-#include <utility>
+#include <utility> // For access to std::unreachable (c++23)
 
 namespace lwcli
 {

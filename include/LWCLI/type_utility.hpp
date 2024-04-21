@@ -1,7 +1,7 @@
 #ifndef LWCLI_INCLUDE_LWCLI_TYPE_UTILITY_HPP
 #define LWCLI_INCLUDE_LWCLI_TYPE_UTILITY_HPP
 
-#include <optional>
+#include <optional> // For access to std::optional
 
 namespace lwcli
 {

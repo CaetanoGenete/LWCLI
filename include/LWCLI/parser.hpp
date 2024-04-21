@@ -1,12 +1,11 @@
 #ifndef LWCLI_INCLUDE_LWCLI_PARSER_HPP
 #define LWCLI_INCLUDE_LWCLI_PARSER_HPP
 
-#include <cassert>
-#include <cstdint>
-#include <cstring>
-#include <string>
-#include <unordered_set>
-#include <vector>
+#include <cassert>       // For access to assert
+#include <cstdint>       // For access to size_t
+#include <string>        // For access to std::string
+#include <unordered_set> // For access to std::unordered_set
+#include <vector>        // For access to std::vector
 
 #include "LWCLI/_options_stores.hpp"
 #include "LWCLI/exceptions.hpp"

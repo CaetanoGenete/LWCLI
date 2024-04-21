@@ -1,11 +1,11 @@
 #ifndef LWCLI_INCLUDE_LWCLI_EXCEPTIONS_HPP
 #define LWCLI_INCLUDE_LWCLI_EXCEPTIONS_HPP
 
-#include <cstdint>
-#include <ranges> // for access to std::ranges::input_range
-#include <sstream>
-#include <stdexcept>
-#include <string>
+#include <cstdint>   // For access to size_t
+#include <ranges>    // For access to std::ranges::input_range
+#include <sstream>   // For access to std::stringstream
+#include <stdexcept> // For access to std::runtime_error
+#include <string>    // For access to std::string
 
 namespace lwcli
 {
@@ -13,7 +13,7 @@ namespace lwcli
 struct bad_parse : public std::runtime_error
 {
 protected:
-    bad_parse(const std::string& failed_expression, const std::string& message):
+    explicit bad_parse(const std::string& failed_expression, const std::string& message):
         std::runtime_error("[FATAL] While parsing '" + failed_expression + "': " + message)
     {}
 
@@ -35,7 +35,7 @@ struct _bad_cast
 struct bad_positional_count : public bad_parse
 {
 public:
-    bad_positional_count(const std::string& failed_expression, size_t n_max_positional):
+    explicit bad_positional_count(const std::string& failed_expression, size_t n_max_positional):
         bad_parse(
             failed_expression,
             "Program expects at most " + std::to_string(n_max_positional) + " positional arguments, but at least "
@@ -62,7 +62,7 @@ struct bad_positional_conversion : public bad_parse
 /// Exception thrown upon failure to convert from string to the expected type of a key-value option.
 struct bad_value_conversion : public bad_parse
 {
-    bad_value_conversion(const std::string& key, const _bad_cast& error_data):
+    explicit bad_value_conversion(const std::string& key, const _bad_cast& error_data):
         bad_parse(
             key,
             "No suitable conversion found from '" + error_data.value + "' to " + error_data.type_name + " type."),
