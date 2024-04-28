@@ -1,13 +1,17 @@
 #include "gtest/gtest.h" // cppcheck-suppress [missingInclude]
 
 #include <array>
+#include <concepts>
 #include <ranges>
 #include <sstream>
 #include <string>
+#include <vector>
 
-#include "LWCLI/LWCLI.hpp"
+#include "LWCLI/exceptions.hpp"
+#include "LWCLI/options.hpp"
+#include "LWCLI/parser.hpp"
 
-[[nodiscard]] std::vector<std::string> split_args(const std::string& command_line) noexcept
+[[nodiscard]] std::vector<std::string> split_args(const std::string& command_line)
 {
     std::stringstream ss(command_line);
     std::vector<std::string> result;
@@ -47,7 +51,7 @@ requires std::is_same_v<const char*, std::ranges::range_value_t<RangeType>>
     return parse_succeeds(parser, std::vector(std::begin(cstr_view), std::end(cstr_view)));
 }
 
-TEST(integration, all_options_types_happy)
+TEST(integration, AllOptionTypesHappy)
 {
     lwcli::FlagOption flag_option;
     flag_option.aliases = {"-v"};
@@ -71,7 +75,7 @@ TEST(integration, all_options_types_happy)
     ASSERT_EQ(std::stod(positional), positional_option.value);
 }
 
-TEST(interation, duplicate_flag_options_happy)
+TEST(interation, DuplicateFlagOptionsHappy)
 {
     lwcli::FlagOption flag_option;
     flag_option.aliases = {"--value1", "--value2", "--value3"};
@@ -129,18 +133,18 @@ template<std::derived_from<lwcli::bad_parse> ExpectException>
     return testing::AssertionFailure() << "No exception was thrown";
 }
 
-struct key_value_conversion_unhappy_tests : public testing::TestWithParam<std::string>
+class KeyValueConversionUnhappyTests : public testing::TestWithParam<std::string>
 {};
 
 INSTANTIATE_TEST_SUITE_P(
     invalid_key_value_args,
-    key_value_conversion_unhappy_tests,
+    KeyValueConversionUnhappyTests,
     testing::Values(
         "integration --value non-int-value",
         "integration --other-value non-int-value",
         "integration --value true --other-value 10"));
 
-TEST_P(key_value_conversion_unhappy_tests, bad_conversion)
+TEST_P(KeyValueConversionUnhappyTests, BadConversion)
 {
     lwcli::KeyValueOption<int> value;
     value.aliases = {"--value"};
@@ -158,15 +162,15 @@ TEST_P(key_value_conversion_unhappy_tests, bad_conversion)
     EXPECT_TRUE(parse_fails<lwcli::bad_value_conversion>(parser, GetParam()));
 }
 
-struct bad_positional_unhappy_tests : public testing::TestWithParam<std::string>
+class BadPositionalUnhappyTests : public testing::TestWithParam<std::string>
 {};
 
 INSTANTIATE_TEST_SUITE_P(
     invalid_positional_count_tests,
-    bad_positional_unhappy_tests,
+    BadPositionalUnhappyTests,
     testing::Values("integration 10 20.123 30", "integration 10 20 30 40"));
 
-TEST_P(bad_positional_unhappy_tests, bad_conversion)
+TEST_P(BadPositionalUnhappyTests, BadConversion)
 {
     lwcli::PositionalOption<int> value1;
     lwcli::PositionalOption<double> value2;
@@ -181,18 +185,18 @@ TEST_P(bad_positional_unhappy_tests, bad_conversion)
     EXPECT_TRUE(parse_fails<lwcli::bad_positional_count>(parser, GetParam()));
 }
 
-struct bad_key_value_format_unhappy_tests : public testing::TestWithParam<std::string>
+class BadKeyValueFormatUnhappyTests : public testing::TestWithParam<std::string>
 {};
 
 INSTANTIATE_TEST_SUITE_P(
     no_value_tests,
-    bad_key_value_format_unhappy_tests,
+    BadKeyValueFormatUnhappyTests,
     testing::Values(
         "integration --value1 10 --value2-1",
         "integration --value1 10 --value2-2",
         "integration --value2-1 12.1 --value1"));
 
-TEST_P(bad_key_value_format_unhappy_tests, bad_format)
+TEST_P(BadKeyValueFormatUnhappyTests, BadFormat)
 {
     lwcli::KeyValueOption<int> value1;
     value1.aliases = {"--value1"};
@@ -210,15 +214,15 @@ TEST_P(bad_key_value_format_unhappy_tests, bad_format)
     EXPECT_TRUE(parse_fails<lwcli::bad_key_value_format>(parser, GetParam()));
 }
 
-struct required_key_value_tests : public testing::TestWithParam<std::string>
+class RequiredKeyValueTests : public testing::TestWithParam<std::string>
 {};
 
 INSTANTIATE_TEST_SUITE_P(
     invalid_required_key_value_inputs,
-    required_key_value_tests,
+    RequiredKeyValueTests,
     testing::Values("integration", "integration --required1 10", "integration --required2 10"));
 
-TEST_P(required_key_value_tests, required_key_value_options_unhappy)
+TEST_P(RequiredKeyValueTests, RequiredKeyValueOptionsUnhappy)
 {
     lwcli::KeyValueOption<int> required_1;
     required_1.aliases = {"--required1"};

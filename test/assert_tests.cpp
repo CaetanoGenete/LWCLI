@@ -1,22 +1,22 @@
 #include "gtest/gtest.h" // cppcheck-suppress [missingInclude]
 
-#include "LWCLI/LWCLI.hpp"
+#include "LWCLI/options.hpp"
+#include "LWCLI/parser.hpp"
 
-TEST(assert_tests, multi_options_same_key)
+TEST(AssertTests, MultiOptionsSameKey)
 {
-    lwcli::FlagOption option1{
-        .aliases = {"--value1", "--value2"},
-    };
-    lwcli::FlagOption option2{
-        .aliases = {"--value2", "--value3"},
-    };
+    lwcli::FlagOption option1;
+    option1.aliases = {"--value1", "--value2"};
+
+    lwcli::FlagOption option2;
+    option2.aliases = {"--value2", "--value3"};
 
     lwcli::CLIParser parser;
     parser.register_option(option1);
     EXPECT_DEATH(parser.register_option(option2), "Duplicate option alias detected.");
 }
 
-TEST(assert_tests, multi_options_same_key_different_option_types)
+TEST(AssertTests, MultiOptionsSameKeyDifferentOptionTypes)
 {
     lwcli::FlagOption option1;
     option1.aliases = {"--value1", "--value2"};
@@ -29,7 +29,7 @@ TEST(assert_tests, multi_options_same_key_different_option_types)
     EXPECT_DEATH(parser.register_option(option2), "Duplicate option alias detected.");
 }
 
-TEST(assert_tests, fail_on_empty_alias)
+TEST(AssertTests, FailOnEmptyAlias)
 {
     lwcli::FlagOption err_option;
     err_option.aliases = {"--value1", "", "--value2"};
@@ -39,7 +39,7 @@ TEST(assert_tests, fail_on_empty_alias)
     EXPECT_DEATH(parser.register_option(err_option), ".*");
 }
 
-TEST(assert_tests, fail_on_alias_with_space)
+TEST(AssertTests, FailOnAliasWithSpace)
 {
     lwcli::FlagOption err_option;
     err_option.aliases = {"--value1", "--val ue2"};

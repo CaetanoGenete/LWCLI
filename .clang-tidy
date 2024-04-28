@@ -1,0 +1,24 @@
+Checks:
+    - '*'
+    - '-llvmlibc-*'
+    - '-abseil-*'
+    - '-readability-redundant-access-specifiers'
+    # TODO(Caetano): Perhaps figure out how to set MininumLineLenght for these
+    - '-readability-braces-around-statements'
+    - '-readability-function-cognitive-complexity'
+    - '-google-readability-braces-around-statements'
+    - '-hicpp-braces-around-statements'
+    - '-fuchsia-overloaded-operator'
+    - '-fuchsia-default-arguments-calls'
+    - '-modernize-use-trailing-return-type'
+    - '-misc-non-private-member-variables-in-classes'
+    - '-altera-unroll-loops'
+    # Maybe uncomment this to discover some true inneficiencies
+    - '-altera-struct-pack-align'
+    - '-llvm-header-guard'
+    - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
+CheckOptions:
+    readability-identifier-length.MinimumVariableNameLength: 2
+    readability-identifier-length.MinimumParameterNameLength: 2
+HeaderFilterRegex: ".*"
+WarningsAsErrors: "*,-altera-id-dependent-backward-branch"

@@ -2,10 +2,6 @@
   "name": "lwcli",
   "version": "0.0.1",
   "features": {
-    "benchmarks": {
-      "description": "Build benchmarks",
-      "dependencies": [ "benchmark" ]
-    },
     "tests": {
       "description": "Build tests",
       "dependencies": [ "gtest" ]

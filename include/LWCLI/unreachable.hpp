@@ -18,7 +18,7 @@ namespace lwcli
     #endif
 #endif
     // Note: If neither __GNUC__ nor _MSC_VER is defined, this function will still trigger undefined behaviour due to
-    // the [[noreturn]].
+    // [[noreturn]].
 }
 
 } // namespace lwcli

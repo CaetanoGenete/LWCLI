@@ -10,6 +10,7 @@
 
 #include "LWCLI/cast.hpp"
 #include "LWCLI/exceptions.hpp"
+#include "LWCLI/options.hpp"
 #include "LWCLI/type_utility.hpp"
 
 namespace lwcli
@@ -67,8 +68,8 @@ void _on_invoke_valued_option(const char* const value, void* const result_ptr)
         *static_cast<Type*>(result_ptr) = cast<naked_type>::from_string(value);
     }
     catch (...) {
-        // TODO: perhaps add method of displaying pretty names
-        throw _bad_cast{value, typeid(naked_type).name()};
+        // TODO(Caetano): perhaps add method of displaying pretty names
+        throw _bad_cast(value, typeid(naked_type).name());
     }
 }
 
@@ -99,7 +100,7 @@ private:
     }
 
 public:
-    void register_flag(FlagOption& option) noexcept
+    void register_flag(FlagOption& option)
     {
         _register_aliases(
             _named_id(_named_id::Type::FLAG, static_cast<_named_id::value_t>(_flag_count_ptrs.size())),
@@ -109,7 +110,7 @@ public:
     }
 
     template<class Type>
-    [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option) noexcept
+    [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option)
     {
         const _named_id id(_named_id::Type::KEY_VALUE, static_cast<_named_id::value_t>(_key_value_options.size()));
         _register_aliases(id, option.aliases);
@@ -142,7 +143,7 @@ public:
     }
 
 public:
-    [[nodiscard]] std::unordered_map<std::string, _named_id> alias_to_id() const noexcept
+    [[nodiscard]] const std::unordered_map<std::string, _named_id>& alias_to_id() const noexcept
     {
         return _alias_to_id;
     }
@@ -157,7 +158,7 @@ class _positional_options_store
 {
 public:
     template<class Type>
-    void register_option(PositionalOption<Type>& option) noexcept
+    void register_option(PositionalOption<Type>& option)
     {
         _options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
     }
@@ -183,9 +184,9 @@ private:
 template<>
 struct std::hash<lwcli::_named_id>
 {
-    [[nodiscard]] std::size_t operator()(const lwcli::_named_id& s) const noexcept
+    [[nodiscard]] std::size_t operator()(const lwcli::_named_id& id) const noexcept(true)
     {
-        return std::hash<lwcli::_named_id::value_t>{}(s._index);
+        return std::hash<lwcli::_named_id::value_t>{}(id._index);
     }
 };
 

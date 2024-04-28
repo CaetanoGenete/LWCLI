@@ -46,10 +46,12 @@ public:
     {
         std::unordered_set not_visted(std::begin(_required_options), std::end(_required_options));
 
-        const auto argend = argv + argc;
+        const char* const* argend = argv + argc;
         for (size_t position = 0; ++argv != argend;) {
+            // Help
+            if (std::strcmp(*argv, "-h") == 0 || std::strcmp(*argv, "--help") == 0) {}
             // Named option
-            if (const auto id = _named_options.id_of(*argv); id != _invalid_id) {
+            else if (const auto id = _named_options.id_of(*argv); id != _invalid_id) {
                 not_visted.erase(id);
                 switch (id.type()) {
                 case _named_id::Type::FLAG:

@@ -18,13 +18,19 @@ protected:
     {}
 
 public:
-    const std::string failed_expression;
+    std::string failed_expression;
 };
 
-struct _bad_cast
+struct _bad_cast : public std::exception
 {
-    const std::string value;
-    const std::string type_name;
+    explicit _bad_cast(std::string value, std::string type_name):
+        std::exception("[ERROR] Internal error, should always be caught!"),
+        value(std::move(value)),
+        type_name(std::move(type_name))
+    {}
+
+    std::string value;
+    std::string type_name;
 };
 
 /// Exception thrown if: More than the expected number of positional arguments are provided.
@@ -43,7 +49,8 @@ public:
         n_max_positional(n_max_positional)
     {}
 
-    const size_t n_max_positional;
+private:
+    size_t n_max_positional;
 };
 
 /// Exception thrown upon failure to convert from string to the expected type of a positional argument.
@@ -55,8 +62,8 @@ struct bad_positional_conversion : public bad_parse
         type(error_data.type_name)
     {}
 
-    const std::string value;
-    const std::string type;
+    std::string value;
+    std::string type;
 };
 
 /// Exception thrown upon failure to convert from string to the expected type of a key-value option.
@@ -70,8 +77,8 @@ struct bad_value_conversion : public bad_parse
         type(error_data.type_name)
     {}
 
-    const std::string value;
-    const std::string type;
+    std::string value;
+    std::string type;
 };
 
 /// Exception thrown if no value is provided to a key-value option, this can only happen if the key is the last

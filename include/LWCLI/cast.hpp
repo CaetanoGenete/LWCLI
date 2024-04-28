@@ -15,7 +15,7 @@ struct cast;
 template<>
 struct cast<std::string>
 {
-    [[nodiscard]] constexpr static std::string from_string(const std::string& str) noexcept
+    [[nodiscard]] constexpr static std::string from_string(const std::string& str)
     {
         return str;
     }
@@ -23,7 +23,7 @@ struct cast<std::string>
 
 /* Numeric casts ---------------------------------------------------------------------------------------------------- */
 
-// TODO: Perhaps call each sto[x] function independentaly
+// TODO(Caetano): Perhaps call each sto[x] function independentaly
 template<std::floating_point FPType>
 struct cast<FPType>
 {

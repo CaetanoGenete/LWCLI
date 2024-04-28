@@ -2,7 +2,7 @@
 #define LWCLI_INCLUDE_LWCLI_OPTIONS_HPP
 
 #include <string> // For access to std::string
-#include <vector> // For access to std::
+#include <vector> // For access to std::vector
 
 namespace lwcli
 {
@@ -12,7 +12,7 @@ struct FlagOption
     using count_t = unsigned int;
 
     std::vector<std::string> aliases;
-    std::string description{};
+    std::string description;
     count_t count = 0;
 };
 
@@ -22,7 +22,7 @@ struct KeyValueOption
     using value_t = Type;
 
     std::vector<std::string> aliases;
-    std::string description{};
+    std::string description;
     value_t value{};
 };
 
@@ -31,8 +31,8 @@ struct PositionalOption
 {
     using value_t = Type;
 
-    std::string name{};
-    std::string description{};
+    std::string name;
+    std::string description;
     value_t value{};
 };
 

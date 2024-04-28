@@ -1,12 +1,13 @@
 #include "gtest/gtest.h" // cppcheck-suppress [missingInclude]
 
-#include <algorithm>
 #include <ranges>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "LWCLI/cast.hpp"
 
-TEST(lwcli_tests, hello)
+TEST(LWCLITests, hello)
 {
     GTEST_ASSERT_TRUE(true);
 }
@@ -21,18 +22,18 @@ using StringCastTest = CastTests<std::string>;
 
 INSTANTIATE_TEST_SUITE_P(valid_str_ints, IntCastTests, testing::Values("10", "0", "-26"));
 
-TEST_P(IntCastTests, happy_int_casts)
+TEST_P(IntCastTests, HappyIntCasts)
 {
-    int value;
+    int value{};
     ASSERT_NO_THROW({ value = lwcli::cast<int>::from_string(GetParam()); });
     ASSERT_EQ(value, std::stoi(GetParam()));
 }
 
 INSTANTIATE_TEST_SUITE_P(valid_str_doubles, DoubleCastTests, testing::Values("10", "0.0", "-26.43"));
 
-TEST_P(DoubleCastTests, happy_double_casts)
+TEST_P(DoubleCastTests, HappyDoubleCasts)
 {
-    double value;
+    double value{};
     ASSERT_NO_THROW({ value = lwcli::cast<double>::from_string(GetParam()); });
     ASSERT_EQ(value, std::stod(GetParam()));
 }
@@ -42,14 +43,14 @@ INSTANTIATE_TEST_SUITE_P(
     StringCastTest,
     testing::Values("10", "", "--some-value", "-f", "something-else"));
 
-TEST_P(StringCastTest, happy_string_casts)
+TEST_P(StringCastTest, HappyStringCasts)
 {
     std::string value;
     ASSERT_NO_THROW({ value = lwcli::cast<std::string>::from_string(GetParam()); });
     ASSERT_EQ(value, std::string(GetParam()));
 }
 
-TEST(IntListCastTest, empty_vector_test)
+TEST(IntListCastTest, EmptyVectorTest)
 {
     constexpr auto test_case = "";
 
@@ -59,7 +60,7 @@ TEST(IntListCastTest, empty_vector_test)
     ASSERT_EQ(0, result.size());
 }
 
-TEST(IntListCastTest, filled_vector_test)
+TEST(IntListCastTest, FilledVectorTest)
 {
     using vec_t = std::vector<int>;
     const vec_t test_case = {10, 20, 30, 40, 50};
