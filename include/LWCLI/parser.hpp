@@ -44,7 +44,7 @@ public:
 public:
     void parse(const int argc, const char* const* argv)
     {
-        std::unordered_set not_visted(std::begin(_required_options), std::end(_required_options));
+        std::unordered_set not_visited(std::begin(_required_options), std::end(_required_options));
 
         const char* const* argend = argv + argc;
         for (size_t position = 0; ++argv != argend;) {
@@ -52,7 +52,7 @@ public:
             if (std::strcmp(*argv, "-h") == 0 || std::strcmp(*argv, "--help") == 0) {}
             // Named option
             else if (const auto id = _named_options.id_of(*argv); id != _invalid_id) {
-                not_visted.erase(id);
+                not_visited.erase(id);
                 switch (id.type()) {
                 case _named_id::Type::FLAG:
                     _named_options.invoke_flag_option(id);
@@ -85,10 +85,10 @@ public:
             }
         }
 
-        if (!not_visted.empty()) [[unlikely]] {
+        if (!not_visited.empty()) [[unlikely]] {
             std::unordered_map<_named_id, std::string> aliases;
             for (const auto& [alias, id] : _named_options.alias_to_id()) {
-                if (not_visted.contains(id)) {
+                if (not_visited.contains(id)) {
                     const auto [loc, success] = aliases.try_emplace(id, alias);
                     if (!success)
                         loc->second += " | " + alias;

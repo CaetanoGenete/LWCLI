@@ -1,9 +1,9 @@
 Checks:
     - '*'
     - '-llvmlibc-*'
-    - '-abseil-*'
+    - '-abseil-*' # Note: not using abseil
     - '-readability-redundant-access-specifiers'
-    # TODO(Caetano): Perhaps figure out how to set MininumLineLenght for these
+    # TODO(Caetano): Perhaps figure out how to set MinimumLineLength for these
     - '-readability-braces-around-statements'
     - '-readability-function-cognitive-complexity'
     - '-google-readability-braces-around-statements'
@@ -13,12 +13,9 @@ Checks:
     - '-modernize-use-trailing-return-type'
     - '-misc-non-private-member-variables-in-classes'
     - '-altera-unroll-loops'
-    # Maybe uncomment this to discover some true inneficiencies
-    - '-altera-struct-pack-align'
+    - '-altera-struct-pack-align' # Maybe uncomment this to discover some true inefficiencies
     - '-llvm-header-guard'
+    - '-readability-identifier-length'
     - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
-CheckOptions:
-    readability-identifier-length.MinimumVariableNameLength: 2
-    readability-identifier-length.MinimumParameterNameLength: 2
 HeaderFilterRegex: ".*"
 WarningsAsErrors: "*,-altera-id-dependent-backward-branch"

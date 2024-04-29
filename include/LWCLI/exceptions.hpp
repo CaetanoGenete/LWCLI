@@ -95,7 +95,7 @@ struct bad_required_options : public bad_parse
 {
 private:
     template<std::ranges::input_range Range>
-    static std::string _build_error_messasge(const Range& missing_options)
+    static std::string _build_error_message(const Range& missing_options)
     {
         std::stringstream stream;
         stream << "Arguments:\n";
@@ -109,7 +109,7 @@ public:
     template<std::ranges::input_range Range>
     requires std::is_convertible_v<std::ranges::range_value_t<Range>, std::string>
     explicit bad_required_options(const Range& missing_options):
-        bad_parse("", _build_error_messasge(missing_options))
+        bad_parse("", _build_error_message(missing_options))
     {}
 };
 } // namespace lwcli

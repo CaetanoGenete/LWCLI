@@ -17,6 +17,7 @@
     std::vector<std::string> result;
 
     std::string arg;
+    // NOLINTNEXTLINE(altera-id-dependent-backward-branch)
     while (std::getline(ss, arg, ' '))
         result.push_back(arg);
 
@@ -32,7 +33,7 @@
     }
     catch (const lwcli::bad_parse& e) {
         return testing::AssertionFailure()
-               << "'" << typeid(lwcli::bad_parse).name() << "' exception thrown with mesasage: " << e.what();
+               << "'" << typeid(lwcli::bad_parse).name() << "' exception thrown with message: " << e.what();
     }
     return testing::AssertionSuccess();
 }

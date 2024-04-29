@@ -1,0 +1,40 @@
+########################################################################################################################
+#                                                                                                                      #
+# GTest is incompatible with a few linting options provided by clang-tidy, hence to allow as much linting as possible  #
+# the relevant options have been disabled for files in this sub-directory.                                             #
+#                                                                                                                      #
+########################################################################################################################
+
+Checks:
+    - '*'
+    - '-llvmlibc-*'
+    - '-abseil-*'
+    - '-readability-redundant-access-specifiers'
+    - '-readability-braces-around-statements'
+    - '-readability-function-cognitive-complexity'
+    - '-google-readability-braces-around-statements'
+    - '-hicpp-braces-around-statements'
+    - '-fuchsia-overloaded-operator'
+    - '-fuchsia-default-arguments-calls'
+    - '-modernize-use-trailing-return-type'
+    - '-misc-non-private-member-variables-in-classes'
+    - '-altera-unroll-loops'
+    - '-altera-struct-pack-align'
+    - '-llvm-header-guard'
+    - '-readability-identifier-length'
+    - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
+    # Note: The following cause errors to appear in VSCode due to the GTest macros.
+    - "-cppcoreguidelines-pro-bounds-pointer-arithmetic"
+    - "-cppcoreguidelines-avoid-non-const-global-variables"
+    - "-cppcoreguidelines-avoid-goto"
+    - "-cppcoreguidelines-owning-memory"
+    - "-cppcoreguidelines-pro-type-vararg"
+    - "-cert-err58-cpp"
+    - "-cert-err33-c"
+    - "-fuchsia-statically-constructed-objects"
+    - "-hicpp-avoid-goto"
+    - "-hicpp-vararg"
+    - "-misc-const-correctness"
+    - "-misc-use-anonymous-namespace"
+HeaderFilterRegex: ".*"
+WarningsAsErrors: "*,-altera-id-dependent-backward-branch"

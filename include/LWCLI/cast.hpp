@@ -23,7 +23,7 @@ struct cast<std::string>
 
 /* Numeric casts ---------------------------------------------------------------------------------------------------- */
 
-// TODO(Caetano): Perhaps call each sto[x] function independentaly
+// TODO(Caetano): Perhaps call each sto[x] function independently
 template<std::floating_point FPType>
 struct cast<FPType>
 {

@@ -27,7 +27,7 @@ IntegerLiteralSeparator:
   DecimalMinDigits: 5
   Hex: -1
 
-# Parameter/argumet alignment ---------------------------------------------------------------------------------------- #
+# Parameter/argument alignment --------------------------------------------------------------------------------------- #
 
 AlignAfterOpenBracket: AlwaysBreak
 AllowAllArgumentsOnNextLine: false
