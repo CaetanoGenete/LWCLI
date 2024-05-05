@@ -56,11 +56,15 @@ TEST(integration, AllOptionTypesHappy)
 {
     lwcli::FlagOption flag_option;
     flag_option.aliases = {"-v"};
+    flag_option.description = "Description for option";
 
     lwcli::KeyValueOption<int> key_value_option;
     key_value_option.aliases = {"--value"};
+    key_value_option.description = "Description for key-value option";
 
     lwcli::PositionalOption<double> positional_option;
+    positional_option.name = "Some random name";
+    positional_option.description = "Description for positional option";
 
     lwcli::CLIParser parser;
     parser.register_option(flag_option);
@@ -80,9 +84,11 @@ TEST(interation, DuplicateFlagOptionsHappy)
 {
     lwcli::FlagOption flag_option;
     flag_option.aliases = {"--value1", "--value2", "--value3"};
+    flag_option.description = "Description for option";
 
     lwcli::FlagOption other_flag_option;
     other_flag_option.aliases = {"--other-value"};
+    other_flag_option.description = "Description for other option";
 
     lwcli::CLIParser parser;
     parser.register_option(flag_option);
@@ -149,9 +155,11 @@ TEST_P(KeyValueConversionUnhappyTests, BadConversion)
 {
     lwcli::KeyValueOption<int> value;
     value.aliases = {"--value"};
+    value.description = "Description for value";
 
     lwcli::KeyValueOption<double> other_value;
     other_value.aliases = {"--other-value"};
+    other_value.description = "Description for other value";
 
     lwcli::CLIParser parser;
     parser.register_option(value);
@@ -174,7 +182,12 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(BadPositionalUnhappyTests, BadConversion)
 {
     lwcli::PositionalOption<int> value1;
+    value1.name = "value1";
+    value1.description = "Description for value 1";
+
     lwcli::PositionalOption<double> value2;
+    value2.name = "value2";
+    value2.description = "Description for value 2";
 
     lwcli::CLIParser parser;
     parser.register_option(value1);
@@ -201,9 +214,11 @@ TEST_P(BadKeyValueFormatUnhappyTests, BadFormat)
 {
     lwcli::KeyValueOption<int> value1;
     value1.aliases = {"--value1"};
+    value1.description = "Description for value 1";
 
     lwcli::KeyValueOption<double> value2;
     value2.aliases = {"--value2-1", "--value2-2"};
+    value2.description = "Description for value 2";
 
     lwcli::CLIParser parser;
     parser.register_option(value1);
@@ -221,15 +236,17 @@ class RequiredKeyValueTests : public testing::TestWithParam<std::string>
 INSTANTIATE_TEST_SUITE_P(
     invalid_required_key_value_inputs,
     RequiredKeyValueTests,
-    testing::Values("integration", "integration --required1 10", "integration --required2 10"));
+    testing::Values("integration --required1 10", "integration --required2 10"));
 
 TEST_P(RequiredKeyValueTests, RequiredKeyValueOptionsUnhappy)
 {
     lwcli::KeyValueOption<int> required_1;
     required_1.aliases = {"--required1"};
+    required_1.description = "Description for required key-value option 1";
 
     lwcli::KeyValueOption<int> required_2;
     required_2.aliases = {"--required2"};
+    required_2.description = "Description for required key-value option 2";
 
     lwcli::CLIParser parser;
     parser.register_option(required_1);

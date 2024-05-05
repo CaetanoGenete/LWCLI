@@ -102,6 +102,8 @@ private:
 public:
     void register_flag(FlagOption& option)
     {
+        assert(!option.description.empty());
+
         _register_aliases(
             _named_id(_named_id::Type::FLAG, static_cast<_named_id::value_t>(_flag_count_ptrs.size())),
             option.aliases);
@@ -113,6 +115,8 @@ public:
     template<class Type>
     [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option)
     {
+        assert(!option.description.empty());
+
         const _named_id id(_named_id::Type::KEY_VALUE, static_cast<_named_id::value_t>(_key_value_options.size()));
         _register_aliases(id, option.aliases);
 
@@ -173,7 +177,9 @@ public:
     template<class Type>
     void register_option(PositionalOption<Type>& option)
     {
-        // assert(!option.name.empty());
+        assert(!option.name.empty());
+        assert(!option.description.empty());
+
         _options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
         _descriptions.emplace_back(&option.name, &option.description);
     }

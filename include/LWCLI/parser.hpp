@@ -58,6 +58,11 @@ private:
 public:
     void parse(const int argc, const char* const* argv)
     {
+        if (argc == 1) {
+            _print_help_message();
+            return;
+        }
+
         std::unordered_set not_visited(std::begin(_required_options), std::end(_required_options));
 
         size_t position = 0;
