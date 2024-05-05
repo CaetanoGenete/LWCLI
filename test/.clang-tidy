@@ -24,7 +24,6 @@ Checks:
     - '-readability-identifier-length'
     - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
     # Note: The following cause errors to appear in VSCode due to the GTest macros.
-    - "-cppcoreguidelines-pro-bounds-pointer-arithmetic"
     - "-cppcoreguidelines-avoid-non-const-global-variables"
     - "-cppcoreguidelines-avoid-goto"
     - "-cppcoreguidelines-owning-memory"

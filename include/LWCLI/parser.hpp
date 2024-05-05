@@ -3,6 +3,8 @@
 
 #include <cassert>       // For access to assert
 #include <cstdint>       // For access to size_t
+#include <iostream>      // For access to std::cout
+#include <sstream>       // For access to std::stringstream
 #include <string>        // For access to std::string
 #include <unordered_set> // For access to std::unordered_set
 #include <vector>        // For access to std::vector
@@ -41,17 +43,31 @@ public:
         return *this;
     }
 
+private:
+    void _print_help_message()
+    {
+        for (const _positional_description& desc : _positional_options.descriptions()) {
+            std::cout << desc.name_ptr << ":\n";
+            if (!desc.description_ptr->empty())
+                std::cout << "  " << *desc.description_ptr << "\n\n";
+            else
+                std::cout << "\n";
+        }
+    }
+
 public:
     void parse(const int argc, const char* const* argv)
     {
         std::unordered_set not_visited(std::begin(_required_options), std::end(_required_options));
 
-        const char* const* argend = argv + argc;
-        for (size_t position = 0; ++argv != argend;) {
-            // Help
-            if (std::strcmp(*argv, "-h") == 0 || std::strcmp(*argv, "--help") == 0) {}
+        size_t position = 0;
+        for (int i = 1; i < argc; ++i) {
+            const auto& arg = argv[i];
+            if (std::strcmp(arg, "-h") == 0 || std::strcmp(arg, "--help") == 0) {
+                _print_help_message();
+            }
             // Named option
-            else if (const auto id = _named_options.id_of(*argv); id != _invalid_id) {
+            else if (const auto id = _named_options.id_of(argv[i]); id != _invalid_id) {
                 not_visited.erase(id);
                 switch (id.type()) {
                 case _named_id::Type::FLAG:
@@ -59,15 +75,15 @@ public:
                     break;
 
                 case _named_id::Type::KEY_VALUE:
-                    if (++argv == argend)
-                        throw bad_key_value_format(*std::prev(argv));
+                    if (++i == argc)
+                        throw bad_key_value_format(arg);
 
                     try {
-                        _named_options.invoke_key_value_option(id, *argv);
+                        _named_options.invoke_key_value_option(id, argv[i]);
                         break;
                     }
                     catch (const _bad_cast& e) {
-                        throw bad_value_conversion(*std::prev(argv), e);
+                        throw bad_value_conversion(arg, e);
                     }
 
                 default:
@@ -77,7 +93,7 @@ public:
             // Positional option
             else {
                 try {
-                    _positional_options.invoke_at(position++, *argv);
+                    _positional_options.invoke_at(position++, arg);
                 }
                 catch (const _bad_cast& e) {
                     throw bad_positional_conversion(e);

@@ -107,6 +107,7 @@ public:
             option.aliases);
 
         _flag_count_ptrs.push_back(&option.count);
+        _descriptions.push_back(&option.description);
     }
 
     template<class Type>
@@ -124,6 +125,11 @@ public:
     {
         const auto loc = _alias_to_id.find(alias);
         return loc != _alias_to_id.end() ? loc->second : _invalid_id;
+    }
+
+    [[nodiscard]] const std::string* description(const _named_id id) const noexcept
+    {
+        return _descriptions[id._index];
     }
 
     void invoke_flag_option(const _named_id id) const noexcept
@@ -151,7 +157,14 @@ public:
 private:
     std::vector<void*> _flag_count_ptrs;
     std::vector<_erased_valued_option> _key_value_options;
+    std::vector<const std::string*> _descriptions;
     std::unordered_map<std::string, _named_id> _alias_to_id;
+};
+
+struct _positional_description
+{
+    std::string* name_ptr;
+    std::string* description_ptr;
 };
 
 class _positional_options_store
@@ -160,7 +173,9 @@ public:
     template<class Type>
     void register_option(PositionalOption<Type>& option)
     {
+        // assert(!option.name.empty());
         _options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
+        _descriptions.emplace_back(&option.name, &option.description);
     }
 
     void invoke_at(const size_t position, const char* const value) const noexcept(false)
@@ -175,8 +190,15 @@ public:
             throw bad_positional_count(value, max_positional);
     }
 
+public:
+    [[nodiscard]] const std::vector<_positional_description>& descriptions() const noexcept
+    {
+        return _descriptions;
+    }
+
 private:
     std::vector<_erased_valued_option> _options;
+    std::vector<_positional_description> _descriptions;
 };
 
 } // namespace lwcli

@@ -109,7 +109,7 @@ TEST(interation, DuplicateFlagOptionsHappy)
 
 /* Unhappy tests ---------------------------------------------------------------------------------------------------- */
 
-template<std::derived_from<lwcli::bad_parse> ExpectException>
+template<std::derived_from<lwcli::bad_parse> ExpectedException>
 [[nodiscard]] testing::AssertionResult parse_fails(lwcli::CLIParser& parser, const std::string& args)
 {
     const std::vector<std::string> arg_list = split_args(args);
@@ -119,13 +119,13 @@ template<std::derived_from<lwcli::bad_parse> ExpectException>
     try {
         parser.parse(static_cast<int>(std::size(cstr_args)), std::data(cstr_args));
     }
-    catch (const ExpectException&) {
+    catch (const ExpectedException&) {
         return testing::AssertionSuccess();
     }
     catch (const lwcli::bad_parse& e) {
         return testing::AssertionFailure()
                << typeid(lwcli::bad_parse).name() << " exception was thrown, but it was not the expected '"
-               << typeid(ExpectException).name() << "', with message: " << e.what();
+               << typeid(ExpectedException).name() << "', with message: " << e.what();
     }
     catch (...) {
         return testing::AssertionFailure()
