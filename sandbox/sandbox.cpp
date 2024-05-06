@@ -11,8 +11,13 @@ int main(int argc, char** argv)
     op1.name = "test1";
     op1.description = "This sets some value";
 
+    lwcli::KeyValueOption<double> op2;
+    op2.aliases = {"-t", "--test1"};
+    op2.description = "This sets some other value";
+
     lwcli::CLIParser parser;
     parser.register_option(op1);
+    parser.register_option(op2);
 
     try {
         parser.parse(argc, argv);

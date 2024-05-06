@@ -115,12 +115,14 @@ public:
     template<class Type>
     [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option)
     {
+        // To keep with CLI best practices, key-value options must always have a description
         assert(!option.description.empty());
 
         const _named_id id(_named_id::Type::KEY_VALUE, static_cast<_named_id::value_t>(_key_value_options.size()));
         _register_aliases(id, option.aliases);
 
         _key_value_options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
+        _descriptions.push_back(&option.description);
         return id;
     }
 
@@ -131,9 +133,9 @@ public:
         return loc != _alias_to_id.end() ? loc->second : _invalid_id;
     }
 
-    [[nodiscard]] const std::string* description(const _named_id id) const noexcept
+    [[nodiscard]] const std::string& description_of(const _named_id id) const noexcept
     {
-        return _descriptions[id._index];
+        return *_descriptions[id._index];
     }
 
     void invoke_flag_option(const _named_id id) const noexcept
@@ -177,6 +179,7 @@ public:
     template<class Type>
     void register_option(PositionalOption<Type>& option)
     {
+        // To keep with CLI best practices, names and descriptions must be provided for all positional options
         assert(!option.name.empty());
         assert(!option.description.empty());
 

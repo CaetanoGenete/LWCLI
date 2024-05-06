@@ -9,7 +9,7 @@
 
 namespace lwcli
 {
-/// Base class from which all LWCLI parsing errors inherit.
+/// @brief Base class from which all LWCLI parsing errors inherit.
 struct bad_parse : public std::runtime_error
 {
 protected:
@@ -33,7 +33,7 @@ struct _bad_cast : public std::exception
     std::string type_name;
 };
 
-/// Exception thrown if: More than the expected number of positional arguments are provided.
+/// @brief Exception thrown if: More than the expected number of positional arguments are provided.
 ///
 /// > [!NOTE]
 /// > Unrecognised key-value/flag options are parsed as positional arguments, hence, this exception may be thrown in
@@ -53,7 +53,7 @@ private:
     size_t n_max_positional;
 };
 
-/// Exception thrown upon failure to convert from string to the expected type of a positional argument.
+/// @brief Exception thrown upon failure to convert from string to the expected type of a positional argument.
 struct bad_positional_conversion : public bad_parse
 {
     explicit bad_positional_conversion(const _bad_cast& error_data):
@@ -66,7 +66,7 @@ struct bad_positional_conversion : public bad_parse
     std::string type;
 };
 
-/// Exception thrown upon failure to convert from string to the expected type of a key-value option.
+/// @brief Exception thrown upon failure to convert from string to the expected type of a key-value option.
 struct bad_value_conversion : public bad_parse
 {
     explicit bad_value_conversion(const std::string& key, const _bad_cast& error_data):
@@ -81,7 +81,7 @@ struct bad_value_conversion : public bad_parse
     std::string type;
 };
 
-/// Exception thrown if no value is provided to a key-value option, this can only happen if the key is the last
+/// @brief Exception thrown if no value is provided to a key-value option, this can only happen if the key is the last
 /// argument passed.
 struct bad_key_value_format : public bad_parse
 {
@@ -90,7 +90,7 @@ struct bad_key_value_format : public bad_parse
     {}
 };
 
-/// Exception thrown if not **all** *required* arguments have been provided.
+/// @brief Exception thrown if not **all** *required* arguments have been provided.
 struct bad_required_options : public bad_parse
 {
 private:

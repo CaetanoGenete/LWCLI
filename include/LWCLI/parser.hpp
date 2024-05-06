@@ -17,15 +17,38 @@
 namespace lwcli
 {
 
+/// @brief Handles the parsing and help-text generation of a command-line interface.
+///
+/// @warning When registering an option, CLIParser assumes all registered options remain valid until the last invocation
+/// of CLIParser::parse(...). If the memory representing an option is freed, at any point before the last invocation of
+/// CLIParser::parse(...), the correct behaviour of the function can no longer be guaranteed (And can potentially lead
+/// to undefined behaviour).
 class CLIParser
 {
 public:
+    /// @brief Registers a flag option to be parsed from the command-line.
+    ///
+    /// @warning This function will raise an assertion in the event that either:
+    ///  - There is a clashing alias already registered.
+    ///  - The aliases aren't prefixed with '-' or '--'.
+    ///
+    /// @param[in, out] option A reference to the option to register.
+    /// @return This instance of CLIParser.
     CLIParser& register_option(FlagOption& option)
     {
         _named_options.register_flag(option);
         return *this;
     }
 
+    /// @brief Registers a key-value option to be parsed from the command-line.
+    ///
+    /// @warning This function will raise an assertion in the event that either:
+    /// - There is a clashing alias already registered
+    /// - The aliases aren't prefixed with '-' or '--'.
+    ///
+    /// @tparam Type The expected value-type type of the key-value argument.
+    /// @param[in, out] option A reference to the option to register.
+    /// @return This instance of CLIParser.
     template<class Type>
     CLIParser& register_option(KeyValueOption<Type>& option)
     {
@@ -36,6 +59,11 @@ public:
         return *this;
     }
 
+    /// @brief Registers a positional option to be parsed from the command-line.
+    ///
+    /// @tparam Type The expected type of the positional argument.
+    /// @param[in, out] option A reference to the option to register.
+    /// @return This instance of CLIParser.
     template<class Type>
     CLIParser& register_option(PositionalOption<Type>& option)
     {
@@ -46,16 +74,31 @@ public:
 private:
     void _print_help_message()
     {
+        // TODO(Caetano): add usage
+
         for (const _positional_description& desc : _positional_options.descriptions()) {
-            std::cout << desc.name_ptr << ":\n";
-            if (!desc.description_ptr->empty())
-                std::cout << "  " << *desc.description_ptr << "\n\n";
-            else
-                std::cout << "\n";
+            std::cout << *desc.name_ptr << ":\n";
+            std::cout << "  " << *desc.description_ptr << "\n\n";
+        }
+
+        std::unordered_map<_named_id, std::string> alias_lists;
+        for (const auto& [name, id] : _named_options.alias_to_id()) {
+            auto [loc, succeeded] = alias_lists.emplace(id, name);
+            if (!succeeded)
+                loc->second += " | " + name;
+        }
+
+        for (const auto& [id, alias_list] : alias_lists) {
+            std::cout << alias_list << ":\n";
+            std::cout << "  " << _named_options.description_of(id) << "\n\n";
         }
     }
 
 public:
+    /// @brief Parses the command-line arguments based on the options registered.
+    ///
+    /// @param argc The number of arguments
+    /// @param argv The argument list
     void parse(const int argc, const char* const* argv)
     {
         if (argc == 1) {
@@ -70,9 +113,10 @@ public:
             const auto& arg = argv[i];
             if (std::strcmp(arg, "-h") == 0 || std::strcmp(arg, "--help") == 0) {
                 _print_help_message();
+                return;
             }
             // Named option
-            else if (const auto id = _named_options.id_of(argv[i]); id != _invalid_id) {
+            if (const auto id = _named_options.id_of(argv[i]); id != _invalid_id) {
                 not_visited.erase(id);
                 switch (id.type()) {
                 case _named_id::Type::FLAG:
