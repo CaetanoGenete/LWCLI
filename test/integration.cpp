@@ -3,7 +3,6 @@
 #include <array>
 #include <concepts>
 #include <ranges>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -13,13 +12,10 @@
 
 [[nodiscard]] std::vector<std::string> split_args(const std::string& command_line)
 {
-    std::stringstream ss(command_line);
     std::vector<std::string> result;
-
-    std::string arg;
-    // NOLINTNEXTLINE(altera-id-dependent-backward-branch)
-    while (std::getline(ss, arg, ' '))
-        result.push_back(arg);
+    for (const auto& substr : command_line | std::views::split(' '))
+        // cppcheck-suppress [useStlAlgorithm]
+        result.emplace_back(std::begin(substr), std::end(substr));
 
     return result;
 }
@@ -75,9 +71,9 @@ TEST(integration, AllOptionTypesHappy)
     constexpr auto positional = "0.31415926";
     EXPECT_TRUE(parse_succeeds(parser, std::array{"integration", "-v", "--value", value, positional}));
 
-    ASSERT_EQ(1, flag_option.count);
-    ASSERT_EQ(std::stoi(value), key_value_option.value);
-    ASSERT_EQ(std::stod(positional), positional_option.value);
+    EXPECT_EQ(1, flag_option.count);
+    EXPECT_EQ(std::stoi(value), key_value_option.value);
+    EXPECT_EQ(std::stod(positional), positional_option.value);
 }
 
 TEST(interation, DuplicateFlagOptionsHappy)
@@ -109,8 +105,8 @@ TEST(interation, DuplicateFlagOptionsHappy)
             "--value3",
             "--value3",
         }));
-    ASSERT_EQ(9, flag_option.count);
-    ASSERT_EQ(1, other_flag_option.count);
+    EXPECT_EQ(9, flag_option.count);
+    EXPECT_EQ(1, other_flag_option.count);
 }
 
 /* Unhappy tests ---------------------------------------------------------------------------------------------------- */

@@ -26,7 +26,7 @@ TEST_P(IntCastTests, HappyIntCasts)
 {
     int value{};
     ASSERT_NO_THROW({ value = lwcli::cast<int>::from_string(GetParam()); });
-    ASSERT_EQ(value, std::stoi(GetParam()));
+    EXPECT_EQ(value, std::stoi(GetParam()));
 }
 
 INSTANTIATE_TEST_SUITE_P(valid_str_doubles, DoubleCastTests, testing::Values("10", "0.0", "-26.43"));
@@ -35,7 +35,7 @@ TEST_P(DoubleCastTests, HappyDoubleCasts)
 {
     double value{};
     ASSERT_NO_THROW({ value = lwcli::cast<double>::from_string(GetParam()); });
-    ASSERT_EQ(value, std::stod(GetParam()));
+    EXPECT_EQ(value, std::stod(GetParam()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -47,7 +47,7 @@ TEST_P(StringCastTest, HappyStringCasts)
 {
     std::string value;
     ASSERT_NO_THROW({ value = lwcli::cast<std::string>::from_string(GetParam()); });
-    ASSERT_EQ(value, std::string(GetParam()));
+    EXPECT_EQ(value, std::string(GetParam()));
 }
 
 TEST(IntListCastTest, EmptyVectorTest)
@@ -57,7 +57,7 @@ TEST(IntListCastTest, EmptyVectorTest)
     using vec_t = std::vector<int>;
     vec_t result;
     ASSERT_NO_THROW({ result = lwcli::cast<vec_t>::from_string(test_case); });
-    ASSERT_EQ(0, result.size());
+    EXPECT_EQ(0, result.size());
 }
 
 TEST(IntListCastTest, FilledVectorTest)
@@ -72,5 +72,5 @@ TEST(IntListCastTest, FilledVectorTest)
 
     vec_t result;
     ASSERT_NO_THROW({ result = lwcli::cast<vec_t>::from_string(ss.str()); });
-    ASSERT_EQ(test_case, result);
+    EXPECT_EQ(test_case, result);
 }

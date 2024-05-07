@@ -72,14 +72,19 @@ public:
     }
 
 private:
+    static void _print_option_description(const std::string& header, const std::string& description)
+    {
+        // TODO(Caetano): Add option to not add ANSI bold styling.
+        std::cout << header << "\n";
+        std::cout << "  " << description << "\n\n";
+    }
+
     void _print_help_message()
     {
         // TODO(Caetano): add usage
 
-        for (const _positional_description& desc : _positional_options.descriptions()) {
-            std::cout << *desc.name_ptr << ":\n";
-            std::cout << "  " << *desc.description_ptr << "\n\n";
-        }
+        for (const _positional_description& desc : _positional_options.descriptions())
+            _print_option_description(*desc.name_ptr, *desc.description_ptr);
 
         std::unordered_map<_named_id, std::string> alias_lists;
         for (const auto& [name, id] : _named_options.alias_to_id()) {
@@ -88,17 +93,19 @@ private:
                 loc->second += " | " + name;
         }
 
-        for (const auto& [id, alias_list] : alias_lists) {
-            std::cout << alias_list << ":\n";
-            std::cout << "  " << _named_options.description_of(id) << "\n\n";
-        }
+        for (const auto& [id, alias_list] : alias_lists)
+            _print_option_description(alias_list, _named_options.description_of(id));
     }
 
 public:
     /// @brief Parses the command-line arguments based on the options registered.
     ///
-    /// @param argc The number of arguments
-    /// @param argv The argument list
+    /// The '-h' and '--help' arguments are reserved for display the help menu, self-defined flags carrying these
+    /// aliases will be ignored during parsing. The help menu will also be displayed in the event that \p argv is empty
+    /// (Excluding the first argument which should be the name of the binary).
+    ///
+    /// @param[in] argc The number of arguments
+    /// @param[in] argv The argument list
     void parse(const int argc, const char* const* argv)
     {
         if (argc == 1) {

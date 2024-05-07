@@ -12,6 +12,7 @@
 #include "LWCLI/exceptions.hpp"
 #include "LWCLI/options.hpp"
 #include "LWCLI/type_utility.hpp"
+#include "LWCLI/unreachable.hpp"
 
 namespace lwcli
 {
@@ -79,6 +80,13 @@ struct _erased_valued_option
     void (*callback)(const char*, void*);
 };
 
+// Helper class to store and retrieve named options (i.e. flag and key-value options) in O(1) time. Interfacing with
+// this class involves first registering an option using register_flag(...), returning an id object which may then be
+// used to:
+// - parse the option using invoke_flag(...) and invoke_key_value(...).
+// - retrieving the description of the option with description_of(...).
+//
+// Id's can also be retrieved by alias, via the id_of(...) member.
 class _named_option_store
 {
 private:
@@ -102,6 +110,7 @@ private:
 public:
     void register_flag(FlagOption& option)
     {
+        // To keep with CLI best practices, flag options must always have a description
         assert(!option.description.empty());
 
         _register_aliases(
@@ -109,20 +118,23 @@ public:
             option.aliases);
 
         _flag_count_ptrs.push_back(&option.count);
-        _descriptions.push_back(&option.description);
+        _flag_descriptions.push_back(&option.description);
+        assert(_flag_count_ptrs.size() == _flag_descriptions.size());
     }
 
     template<class Type>
     [[nodiscard]] _named_id register_key_value(KeyValueOption<Type>& option)
     {
-        // To keep with CLI best practices, key-value options must always have a description
+        // To keep with CLI best practices, key-value options must always have a description.
         assert(!option.description.empty());
 
         const _named_id id(_named_id::Type::KEY_VALUE, static_cast<_named_id::value_t>(_key_value_options.size()));
         _register_aliases(id, option.aliases);
 
         _key_value_options.emplace_back(&option.value, _on_invoke_valued_option<Type>);
-        _descriptions.push_back(&option.description);
+        _key_value_descriptions.push_back(&option.description);
+        assert(_key_value_options.size() == _key_value_descriptions.size());
+
         return id;
     }
 
@@ -135,7 +147,14 @@ public:
 
     [[nodiscard]] const std::string& description_of(const _named_id id) const noexcept
     {
-        return *_descriptions[id._index];
+        switch (id.type()) {
+        case _named_id::Type::FLAG:
+            return *_flag_descriptions[id._index];
+        case _named_id::Type::KEY_VALUE:
+            return *_key_value_descriptions[id._index];
+        }
+        // Note: needed to stop clang-tidy from complaining (Even enums are exhausted)...
+        _unreachable();
     }
 
     void invoke_flag_option(const _named_id id) const noexcept
@@ -161,10 +180,13 @@ public:
     }
 
 private:
-    std::vector<void*> _flag_count_ptrs;
-    std::vector<_erased_valued_option> _key_value_options;
-    std::vector<const std::string*> _descriptions;
     std::unordered_map<std::string, _named_id> _alias_to_id;
+
+    std::vector<void*> _flag_count_ptrs;
+    std::vector<const std::string*> _flag_descriptions;
+
+    std::vector<_erased_valued_option> _key_value_options;
+    std::vector<const std::string*> _key_value_descriptions;
 };
 
 struct _positional_description
@@ -179,7 +201,8 @@ public:
     template<class Type>
     void register_option(PositionalOption<Type>& option)
     {
-        // To keep with CLI best practices, names and descriptions must be provided for all positional options
+        // To keep with CLI best practices, names and descriptions must be provided for all positional
+        // options.
         assert(!option.name.empty());
         assert(!option.description.empty());
 
@@ -215,9 +238,18 @@ private:
 template<>
 struct std::hash<lwcli::_named_id>
 {
-    [[nodiscard]] std::size_t operator()(const lwcli::_named_id& id) const noexcept(true)
+    [[nodiscard]] std::size_t operator()(const lwcli::_named_id& id) const noexcept
     {
-        return std::hash<lwcli::_named_id::value_t>{}(id._index);
+        const auto index = static_cast<size_t>(id._index);
+        assert(index < std::numeric_limits<size_t>::max() / 2 && "id too large, uniqueness of hash not guaranteed.");
+
+        switch (id.type()) {
+        case lwcli::_named_id::Type::FLAG:
+            return 2 * index;
+        case lwcli::_named_id::Type::KEY_VALUE:
+            return 2 * index + 1;
+        }
+        lwcli::_unreachable();
     }
 };
 

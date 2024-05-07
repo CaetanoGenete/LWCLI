@@ -53,3 +53,30 @@ TEST(AssertTests, FailOnAliasWithSpace)
     lwcli::CLIParser parser;
     EXPECT_DEATH(parser.register_option(err_option), "Aliases should contain no spaces.");
 }
+
+TEST(AssertTests, FailOnPositionalNoDescription)
+{
+    lwcli::PositionalOption<int> err_option;
+    err_option.name = "error_option";
+
+    lwcli::CLIParser parser;
+    EXPECT_DEATH(parser.register_option(err_option), ".*");
+}
+
+TEST(AssertTests, FailOnFlagNoDescription)
+{
+    lwcli::FlagOption err_option;
+    err_option.aliases = {"--option"};
+
+    lwcli::CLIParser parser;
+    EXPECT_DEATH(parser.register_option(err_option), ".*");
+}
+
+TEST(AssertTests, FailOnKeyValueNoDescription)
+{
+    lwcli::KeyValueOption<int> err_option;
+    err_option.aliases = {"--option"};
+
+    lwcli::CLIParser parser;
+    EXPECT_DEATH(parser.register_option(err_option), ".*");
+}
