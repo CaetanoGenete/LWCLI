@@ -153,7 +153,7 @@ public:
         case _named_id::Type::KEY_VALUE:
             return *_key_value_descriptions[id._index];
         }
-        // Note: needed to stop clang-tidy from complaining (Even enums are exhausted)...
+        // Note: needed to stop clang-tidy from complaining (Even though enums are exhausted)...
         _unreachable();
     }
 
@@ -201,8 +201,7 @@ public:
     template<class Type>
     void register_option(PositionalOption<Type>& option)
     {
-        // To keep with CLI best practices, names and descriptions must be provided for all positional
-        // options.
+        // To keep with CLI best practices, names and descriptions must be provided for all positional options.
         assert(!option.name.empty());
         assert(!option.description.empty());
 

@@ -16,10 +16,12 @@ Checks:
     - '-hicpp-braces-around-statements'
     - '-fuchsia-overloaded-operator'
     - '-fuchsia-default-arguments-calls'
+    - '-fuchsia-default-arguments-declarations'
     - '-modernize-use-trailing-return-type'
     - '-misc-non-private-member-variables-in-classes'
     - '-altera-unroll-loops'
     - '-altera-struct-pack-align'
+    - '-altera-id-dependent-backward-branch'
     - '-llvm-header-guard'
     - '-readability-identifier-length'
     - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
@@ -36,4 +38,4 @@ Checks:
     - "-misc-const-correctness"
     - "-misc-use-anonymous-namespace"
 HeaderFilterRegex: ".*"
-WarningsAsErrors: "*,-altera-id-dependent-backward-branch"
+WarningsAsErrors: "*"

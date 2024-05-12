@@ -1,6 +1,7 @@
 #ifndef LWCLI_INCLUDE_LWCLI_PARSER_HPP
 #define LWCLI_INCLUDE_LWCLI_PARSER_HPP
 
+#include <array>
 #include <cassert>       // For access to assert
 #include <cstdint>       // For access to size_t
 #include <iostream>      // For access to std::cout
@@ -10,6 +11,7 @@
 #include <vector>        // For access to std::vector
 
 #include "LWCLI/_options_stores.hpp"
+#include "LWCLI/_util.hpp"
 #include "LWCLI/exceptions.hpp"
 #include "LWCLI/options.hpp"
 #include "LWCLI/unreachable.hpp"
@@ -72,11 +74,15 @@ public:
     }
 
 private:
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     static void _print_option_description(const std::string& header, const std::string& description)
     {
-        // TODO(Caetano): Add option to not add ANSI bold styling.
-        std::cout << header << "\n";
-        std::cout << "  " << description << "\n\n";
+        static constexpr std::size_t COL_WIDTH = 80;
+
+        std::cout << header.c_str() << ":\n";
+        for (std::size_t offset = 0; offset < description.length(); offset += COL_WIDTH)
+            std::cout << "  " << std::string_view(description).substr(offset, COL_WIDTH) << "\n";
+        std::cout << "\n";
     }
 
     void _print_help_message()
@@ -100,7 +106,7 @@ private:
 public:
     /// @brief Parses the command-line arguments based on the options registered.
     ///
-    /// The '-h' and '--help' arguments are reserved for display the help menu, self-defined flags carrying these
+    /// The '-h' and '--help' arguments are reserved for displaying the help menu, self-defined flags carrying these
     /// aliases will be ignored during parsing. The help menu will also be displayed in the event that \p argv is empty
     /// (Excluding the first argument which should be the name of the binary).
     ///
@@ -108,7 +114,8 @@ public:
     /// @param[in] argv The argument list
     void parse(const int argc, const char* const* argv)
     {
-        if (argc == 1) {
+        const auto arg_span = std::span(argv, static_cast<size_t>(argc));
+        if (argc == 1 || contains_any_of(arg_span, std::array{"-h", "--help"}, streq)) {
             _print_help_message();
             return;
         }
@@ -118,10 +125,6 @@ public:
         size_t position = 0;
         for (int i = 1; i < argc; ++i) {
             const auto& arg = argv[i];
-            if (std::strcmp(arg, "-h") == 0 || std::strcmp(arg, "--help") == 0) {
-                _print_help_message();
-                return;
-            }
             // Named option
             if (const auto id = _named_options.id_of(argv[i]); id != _invalid_id) {
                 not_visited.erase(id);
